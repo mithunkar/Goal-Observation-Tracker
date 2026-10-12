@@ -51,8 +51,8 @@ export function SessionReview({
           return (
             <article className="review-card" key={goal.id}>
               <div>
-                <p>{goal.domain}</p>
-                <h3>{goal.title}</h3>
+                <p>Goal area</p>
+                <h3>{goal.domain}</h3>
               </div>
               <dl>
                 <div>

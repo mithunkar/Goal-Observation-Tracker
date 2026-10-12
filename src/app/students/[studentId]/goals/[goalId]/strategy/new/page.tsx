@@ -42,7 +42,7 @@ export default async function NewStrategyPage({
       </Link>
       <section className="auth-surface" aria-labelledby="strategy-title">
         <div className="auth-heading">
-          <p className="session-kicker">{goal.title}</p>
+          <p className="session-kicker">{goal.goalArea}</p>
           <h1 id="strategy-title">{activeStrategy ? "Edit strategy" : "Assign a strategy"}</h1>
         </div>
         <StrategyForm action={action} initialStrategy={activeStrategy ?? undefined} submitLabel={activeStrategy ? "Save new version" : "Assign strategy"} />

@@ -1,27 +1,61 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ReportCard, ScoreDistribution, SummaryMetrics } from "@/app/reporting-components";
-import { requireCurrentApplicationIdentity } from "@/auth/application-session";
+
+import {
+  AreaDistributionChart,
+  CoverageChart,
+  ReportCard,
+  ScoreDistribution,
+  SnapshotMetrics,
+} from "@/app/reporting-components";
 import { canManageClassroom } from "@/auth/authorization";
-import { listAnalyticsObservations } from "@/db/queries/analytics";
-import { findWorkspaceTimezone } from "@/db/queries/users";
+import { requireCurrentApplicationIdentity } from "@/auth/application-session";
 import { summarizeAnalytics, uniqueSessionCount, type AnalyticsObservation } from "@/data/analytics";
 import { reportingPeriodFromSearch } from "@/data/reporting-period";
-import { SKILL_AREAS, STUDENT_GROUP_LABELS, STUDENT_GROUPS, type SkillArea, type StudentGroup } from "@/domain/catalog";
+import { listAnalyticsObservations } from "@/db/queries/analytics";
+import { findWorkspaceTimezone } from "@/db/queries/users";
+import { GOAL_AREAS, STUDENT_GROUP_LABELS, STUDENT_GROUPS, type GoalArea, type StudentGroup } from "@/domain/catalog";
 
 export const dynamic = "force-dynamic";
 
-export default async function ClassroomAnalyticsPage({ searchParams }: { searchParams: Promise<{ start?: string; end?: string; group?: string; domain?: string }> }) {
+type AnalyticsSearch = { start?: string; end?: string; group?: string; goalArea?: string; domain?: string };
+
+export default async function ClassroomAnalyticsPage({ searchParams }: { searchParams: Promise<AnalyticsSearch> }) {
   const identity = await requireCurrentApplicationIdentity();
   if (!canManageClassroom(identity)) redirect("/dashboard");
+
   const search = await searchParams;
   const group = STUDENT_GROUPS.includes(search.group as StudentGroup) ? search.group as StudentGroup : undefined;
-  const domain = SKILL_AREAS.includes(search.domain as SkillArea) ? search.domain as SkillArea : undefined;
+  const requestedArea = search.goalArea ?? search.domain;
+  const goalArea = GOAL_AREAS.includes(requestedArea as GoalArea) ? requestedArea as GoalArea : undefined;
   const { db } = await import("@/db/client");
   const period = reportingPeriodFromSearch(search, await findWorkspaceTimezone(db, identity.workspaceId));
-  const rows = await listAnalyticsObservations(db, identity, { start: period.startAt, end: period.endAt, group, domain }) as AnalyticsObservation[];
+  const rows = await listAnalyticsObservations(db, identity, { start: period.startAt, end: period.endAt, group, domain: goalArea }) as AnalyticsObservation[];
   const summary = summarizeAnalytics(rows);
-  const byGroup = STUDENT_GROUPS.map((item) => [item, summarizeAnalytics(rows.filter((row) => row.studentGroup === item))] as const);
-  const byDomain = SKILL_AREAS.map((item) => [item, summarizeAnalytics(rows.filter((row) => row.domain === item))] as const).filter(([, value]) => value.validObservationCount + value.noDataCount > 0);
-  return <main className="dashboard-shell report-shell"><header className="dashboard-header"><Link className="back-link" href="/dashboard">← Students</Link></header><section className="student-plan-heading"><div><p className="session-kicker">Classroom insights</p><h1>Instructional overview</h1><p>Descriptive data only — students are never ranked.</p></div></section><form className="report-filters" method="get"><label>Start<input type="date" name="start" defaultValue={period.start} /></label><label>End<input type="date" name="end" defaultValue={period.end} /></label><label>Group<select name="group" defaultValue={group ?? ""}><option value="">All groups</option>{STUDENT_GROUPS.map((item) => <option value={item} key={item}>{STUDENT_GROUP_LABELS[item]}</option>)}</select></label><label>Skill area<select name="domain" defaultValue={domain ?? ""}><option value="">All skill areas</option>{SKILL_AREAS.map((item) => <option value={item} key={item}>{item}</option>)}</select></label><button className="secondary-action" type="submit">Apply</button></form><div className="report-grid"><ReportCard title="Collection snapshot"><SummaryMetrics summary={summary} includeTarget={false} /><p>{uniqueSessionCount(rows)} submitted sessions · {new Set(rows.map((row) => row.studentId)).size} students represented</p></ReportCard><ReportCard title="Rubric distribution"><ScoreDistribution summary={summary} /></ReportCard></div><section className="report-card"><h2>By schedule group</h2><div className="report-grid">{byGroup.map(([item, groupSummary]) => <div key={item}><h3>{STUDENT_GROUP_LABELS[item]}</h3><SummaryMetrics summary={groupSummary} includeTarget={false} /></div>)}</div></section><section className="report-card"><h2>By skill area</h2>{byDomain.length ? <div className="report-grid">{byDomain.map(([item, areaSummary]) => <div key={item}><h3>{item}</h3><SummaryMetrics summary={areaSummary} includeTarget={false} /></div>)}</div> : <p>No observations match this period and filter.</p>}</section></main>;
+  const areaSummaries = GOAL_AREAS.map((area) => ({ label: area, summary: summarizeAnalytics(rows.filter((row) => row.domain === area)) }))
+    .filter(({ summary: areaSummary }) => areaSummary.validObservationCount + areaSummary.noDataCount > 0);
+  const groupCoverage = STUDENT_GROUPS.map((item) => {
+    const groupRows = rows.filter((row) => row.studentGroup === item);
+    return { label: STUDENT_GROUP_LABELS[item], valid: groupRows.filter((row) => row.score !== null).length, noData: groupRows.filter((row) => row.score === null).length };
+  });
+
+  return <main className="dashboard-shell report-shell">
+    <header className="dashboard-header"><Link className="back-link" href="/dashboard">← Students</Link></header>
+    <section className="student-plan-heading"><div><p className="session-kicker">Classroom insights</p><h1>Instructional overview</h1><p>Aggregate patterns for planning instruction. Students are never ranked.</p></div></section>
+    <form className="report-filters" method="get">
+      <label>Start<input type="date" name="start" defaultValue={period.start} /></label>
+      <label>End<input type="date" name="end" defaultValue={period.end} /></label>
+      <label>Group<select name="group" defaultValue={group ?? ""}><option value="">All groups</option>{STUDENT_GROUPS.map((item) => <option value={item} key={item}>{STUDENT_GROUP_LABELS[item]}</option>)}</select></label>
+      <label>Goal area<select name="goalArea" defaultValue={goalArea ?? ""}><option value="">All goal areas</option>{GOAL_AREAS.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
+      <button className="secondary-action" type="submit">Apply</button>
+    </form>
+    {rows.length ? <>
+      <section className="report-card report-overview" aria-labelledby="collection-overview"><h2 id="collection-overview">Collection overview</h2><SnapshotMetrics metrics={[["Submitted sessions", uniqueSessionCount(rows)], ["Students represented", new Set(rows.map((row) => row.studentId)).size], ["Valid observations", summary.validObservationCount], ["No-data entries", summary.noDataCount]]} /></section>
+      <div className="report-grid report-grid-contained">
+        <ReportCard title="Overall score distribution"><p className="report-supporting-text">Each rate uses {summary.validObservationCount} valid observations.</p><ScoreDistribution summary={summary} /></ReportCard>
+        <ReportCard title="Schedule group coverage"><CoverageChart groups={groupCoverage} /></ReportCard>
+      </div>
+      <ReportCard title="Patterns by goal area"><p className="report-supporting-text">Counts are shown inside each score band; empty scores are omitted from the band.</p><AreaDistributionChart areas={areaSummaries} /></ReportCard>
+    </> : <section className="roster-empty"><h2>No observations match these filters</h2><p>Choose another period, group, or goal area.</p></section>}
+  </main>;
 }

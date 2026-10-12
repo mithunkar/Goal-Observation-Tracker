@@ -26,9 +26,8 @@ export async function createGoalAction(
   }
 
   const parsed = createGoalSchema.safeParse({
-    title: formData.get("title"),
+    goalArea: formData.get("goalArea"),
     objectiveText: formData.get("objectiveText"),
-    domain: formData.get("domain"),
     targetScore: formData.get("targetScore"),
   });
   if (!parsed.success) {

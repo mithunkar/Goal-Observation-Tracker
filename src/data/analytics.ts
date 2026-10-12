@@ -3,7 +3,7 @@ import type { NoDataReason, ObservationEntry, RubricScore, StrategyFidelityStatu
 import type { SkillArea, StudentGroup } from "@/domain/catalog";
 
 export type AnalyticsObservation = {
-  studentId: string; studentName: string; studentGroup: StudentGroup; goalId: string; goalVersion: number;
+  sessionId: string; studentId: string; studentName: string; studentGroup: StudentGroup; goalId: string; goalVersion: number;
   goalTitle: string; goalObjective: string; domain: SkillArea; targetScore: number | null;
   occurredAt: Date; sessionType: string; scorerName: string; score: number | null; noDataReason: string | null;
   fidelityStatus: string | null; note: string | null; strategyAssignmentId: string | null; strategyVersion: number | null; strategyName: string | null;
@@ -41,5 +41,5 @@ export function summarizeGoals(rows: readonly AnalyticsObservation[]) {
 }
 
 export function uniqueSessionCount(rows: readonly AnalyticsObservation[]) {
-  return new Set(rows.map((row) => `${row.studentId}:${row.occurredAt.toISOString()}:${row.sessionType}:${row.scorerName}`)).size;
+  return new Set(rows.map((row) => row.sessionId)).size;
 }

@@ -6,7 +6,8 @@ import {
   initialGoalActionState,
   type GoalActionState,
 } from "@/domain/goal";
-import { SKILL_AREAS, type SkillArea } from "@/domain/catalog";
+import { GOAL_AREAS, type GoalArea } from "@/domain/catalog";
+import { ScoringKey } from "@/app/scoring-key";
 
 type GoalFormProps = {
   action: (
@@ -14,9 +15,8 @@ type GoalFormProps = {
     formData: FormData,
   ) => Promise<GoalActionState>;
   initialGoal?: {
-    title: string;
     objectiveText: string;
-    domain: SkillArea;
+    domain: GoalArea;
     targetScore: number | null;
     status?: "ACTIVE" | "PAUSED" | "ARCHIVED";
   };
@@ -31,22 +31,6 @@ export function GoalForm({ action, initialGoal, submitLabel = "Save goal" }: Goa
 
   return (
     <form className="account-form" action={formAction} noValidate>
-      <label className="form-field">
-        <span>Goal name</span>
-        <input
-          name="title"
-          maxLength={100}
-          aria-invalid={Boolean(state.errors?.title)}
-          aria-describedby={state.errors?.title ? "goal-title-error" : undefined}
-          autoFocus
-          defaultValue={initialGoal?.title}
-          required
-        />
-        {state.errors?.title ? (
-          <small id="goal-title-error">{state.errors.title[0]}</small>
-        ) : null}
-      </label>
-
       <label className="form-field">
         <span>What should the student do?</span>
         <textarea
@@ -65,25 +49,28 @@ export function GoalForm({ action, initialGoal, submitLabel = "Save goal" }: Goa
         ) : null}
       </label>
 
+      <ScoringKey context="target" />
+
       <div className="form-row">
         <label className="form-field">
-          <span>Skill area</span>
+          <span>Goal area</span>
           <select
-            name="domain"
+            name="goalArea"
             defaultValue={initialGoal?.domain ?? ""}
-            aria-invalid={Boolean(state.errors?.domain)}
+            aria-invalid={Boolean(state.errors?.goalArea)}
             aria-describedby={
-              state.errors?.domain ? "goal-domain-error" : undefined
+              state.errors?.goalArea ? "goal-area-error" : undefined
             }
+            autoFocus
             required
           >
             <option value="" disabled>
               Choose one
             </option>
-            {SKILL_AREAS.map((area) => <option key={area} value={area}>{area}</option>)}
+            {GOAL_AREAS.map((area) => <option key={area} value={area}>{area}</option>)}
           </select>
-          {state.errors?.domain ? (
-            <small id="goal-domain-error">{state.errors.domain[0]}</small>
+          {state.errors?.goalArea ? (
+            <small id="goal-area-error">{state.errors.goalArea[0]}</small>
           ) : null}
         </label>
 

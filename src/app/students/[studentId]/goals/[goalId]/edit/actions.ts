@@ -11,7 +11,7 @@ export async function updateGoalAction(studentId: string, goalId: string, _previ
   const identity = await requireCurrentApplicationIdentity();
   if (!canManageClassroom(identity)) return { status: "error", message: "You do not have permission to edit goals." };
   const parsed = updateGoalSchema.safeParse({
-    title: formData.get("title"), objectiveText: formData.get("objectiveText"), domain: formData.get("domain"), targetScore: formData.get("targetScore"), status: formData.get("status"),
+    goalArea: formData.get("goalArea"), objectiveText: formData.get("objectiveText"), targetScore: formData.get("targetScore"), status: formData.get("status"),
   });
   if (!parsed.success) return { status: "error", message: "Check the highlighted fields.", errors: parsed.error.flatten().fieldErrors };
   const { db } = await import("@/db/client");

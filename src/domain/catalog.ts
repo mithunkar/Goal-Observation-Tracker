@@ -9,7 +9,7 @@ export const STUDENT_GROUP_LABELS: Record<StudentGroup, string> = {
   PM: "PM",
 };
 
-export const SKILL_AREAS = [
+export const GOAL_AREAS = [
   "Social Communication",
   "Social Emotional",
   "Fine Motor",
@@ -18,7 +18,13 @@ export const SKILL_AREAS = [
   "Cognitive",
   "Receptive Communication",
 ] as const;
-export type SkillArea = (typeof SKILL_AREAS)[number];
+export type GoalArea = (typeof GOAL_AREAS)[number];
+
+// Database columns retain their original domain/skill-area names for
+// compatibility. New UI and application code should use GoalArea.
+export const SKILL_AREAS = GOAL_AREAS;
+export type SkillArea = GoalArea;
 
 export const studentGroupSchema = z.enum(STUDENT_GROUPS);
-export const skillAreaSchema = z.enum(SKILL_AREAS);
+export const goalAreaSchema = z.enum(GOAL_AREAS);
+export const skillAreaSchema = goalAreaSchema;

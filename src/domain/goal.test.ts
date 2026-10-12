@@ -6,13 +6,12 @@ describe("goal creation", () => {
   it("normalizes a goal and numeric target", () => {
     expect(
       createGoalSchema.parse({
-        title: "  Following directions ",
+        goalArea: "Receptive Communication",
         objectiveText: " Follows a one-step direction. ",
-        domain: "Receptive Communication",
         targetScore: "3",
       }),
     ).toEqual({
-      title: "Following directions",
+      title: "Receptive Communication",
       objectiveText: "Follows a one-step direction.",
       domain: "Receptive Communication",
       targetScore: 3,
@@ -21,9 +20,8 @@ describe("goal creation", () => {
 
   it("keeps a blank target unset", () => {
     const result = createGoalSchema.parse({
-      title: "Requesting help",
+      goalArea: "Social Communication",
       objectiveText: "Requests help with a word or gesture.",
-      domain: "Social Communication",
       targetScore: "",
     });
 

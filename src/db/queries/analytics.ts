@@ -14,6 +14,7 @@ export type AnalyticsFilters = {
 };
 
 export const observationAnalyticsSelection = {
+  sessionId: sessions.id,
   studentId: students.id,
   studentName: students.displayName,
   studentGroup: students.group,

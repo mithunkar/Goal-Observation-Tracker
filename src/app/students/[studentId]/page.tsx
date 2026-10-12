@@ -86,8 +86,8 @@ export default async function StudentPage({
           {goals.map((goal) => (
             <li className="goal-list-item" key={goal.id}>
               <div>
-                <span>{goal.domain}</span>
-                <h2>{goal.title}</h2>
+                <span>Goal area</span>
+                <h2>{goal.domain}</h2>
                 <p>{goal.objectiveText}</p>
                 {goal.strategyName ? (
                   <div className="goal-strategy">

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { summarizeAnalytics, summarizeGoals } from "./analytics";
+import { summarizeAnalytics, summarizeGoals, uniqueSessionCount } from "./analytics";
 import type { AnalyticsObservation } from "./analytics";
 
 const base: AnalyticsObservation = {
-  studentId: "student", studentName: "Avery", studentGroup: "AM_MW", goalId: "goal", goalVersion: 1,
+  sessionId: "session-1", studentId: "student", studentName: "Avery", studentGroup: "AM_MW", goalId: "goal", goalVersion: 1,
   goalTitle: "Sharing", goalObjective: "Share a toy.", domain: "Social Emotional", targetScore: 3,
   occurredAt: new Date("2026-10-01T17:00:00.000Z"), sessionType: "Centers", scorerName: "Teacher",
   score: 4, noDataReason: null, fidelityStatus: "FULL", note: null, strategyAssignmentId: null, strategyVersion: null, strategyName: null,
@@ -22,5 +22,13 @@ describe("reporting analytics", () => {
     const groups = summarizeGoals([base, { ...base, goalVersion: 2, goalTitle: "Sharing with peers", targetScore: 4, score: 3 }]);
     expect(groups).toHaveLength(2);
     expect(groups[1].summary.targetRate).toMatchObject({ numerator: 0, denominator: 1 });
+  });
+
+  it("counts distinct session identifiers instead of inferring sessions from metadata", () => {
+    expect(uniqueSessionCount([
+      base,
+      { ...base, goalId: "goal-2" },
+      { ...base, sessionId: "session-2" },
+    ])).toBe(2);
   });
 });

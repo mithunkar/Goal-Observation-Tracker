@@ -14,7 +14,7 @@ const goalForStrategySelection = {
   id: goals.id,
   workspaceId: goals.workspaceId,
   studentId: goals.studentId,
-  title: goals.title,
+  goalArea: goals.domain,
   status: goals.status,
 };
 
@@ -22,7 +22,7 @@ type StrategyGoal = {
   id: string;
   workspaceId: string;
   studentId: string;
-  title: string;
+  goalArea: string;
   status: "DRAFT" | "ACTIVE" | "PAUSED" | "ARCHIVED";
 };
 
@@ -114,7 +114,7 @@ export async function createAndAssignStrategy(
         id: existingStrategyId,
         workspaceId: actor.workspaceId,
         name: input.name,
-        purpose: `Support ${goal.title}`,
+        purpose: `Support ${goal.goalArea}`,
         instructions: input.instructions,
         fidelityPrompt: input.fidelityPrompt,
         version: strategyVersion,
@@ -135,7 +135,7 @@ export async function createAndAssignStrategy(
         strategyId: strategy.id,
         strategyVersion: strategy.version,
         startsOn,
-        reason: `Configured for ${goal.title}`,
+        reason: `Configured for ${goal.goalArea}`,
         status: "ACTIVE",
       })
       .returning({ id: goalStrategyAssignments.id });

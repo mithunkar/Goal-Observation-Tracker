@@ -34,6 +34,7 @@ import type {
 } from "@/domain/scoring";
 import type { SessionSubmissionInput } from "@/domain/session-submission";
 import type { ScoringSubmissionResult } from "@/app/students/[studentId]/sessions/new/actions";
+import { ScoringKey } from "@/app/scoring-key";
 
 import { SessionReview } from "./session-review";
 
@@ -256,20 +257,7 @@ export function ScoringSession({
         </div>
       </section>
 
-      <aside className="rubric-key" aria-label="Scoring key">
-        <details open>
-          <summary>Scoring key</summary>
-          <dl>
-            {rubric.map((level) => (
-              <div key={level.value}>
-                <dt>{level.value} — {level.label}</dt>
-                <dd>{level.description}</dd>
-              </div>
-            ))}
-            <div><dt>ND — No data</dt><dd>No data was collected for that session. Select a reason before submitting.</dd></div>
-          </dl>
-        </details>
-      </aside>
+      <ScoringKey />
 
       {mode === "entry" ? (
         <>
@@ -295,10 +283,8 @@ export function ScoringSession({
             >
               <div className="goal-card-heading">
                 <div>
-                  <p className="goal-domain">
-                    Goal {index + 1} · {goal.domain}
-                  </p>
-                  <h2 id={`${goal.id}-title`}>{goal.title}</h2>
+                  <p className="goal-domain">Goal {index + 1}</p>
+                  <h2 id={`${goal.id}-title`}>{goal.domain}</h2>
                 </div>
                 <span className="goal-status" data-complete={isComplete}>
                   {isComplete
