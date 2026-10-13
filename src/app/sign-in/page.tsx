@@ -31,9 +31,9 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
 
   return (
     <main className="auth-shell">
-      <Link className="auth-brand" href="/" aria-label="Evidence Loop home">
-        <span className="brand-mark" aria-hidden="true">EL</span>
-        <span>Evidence Loop</span>
+      <Link className="auth-brand" href="/" aria-label="Goal Observation Tracker home">
+        <span className="brand-mark" aria-hidden="true">GO</span>
+        <span>Goal Observation Tracker</span>
       </Link>
 
       <section className="auth-surface" aria-labelledby="sign-in-title">

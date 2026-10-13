@@ -1,4 +1,4 @@
-# SPED Evidence Loop
+# Goal Observation Tracker
 
 ## Product requirements and implementation handoff
 
@@ -11,7 +11,7 @@
 
 ## 1. Product summary
 
-SPED Evidence Loop is a private classroom data-collection application. A teacher creates student profiles and measurable goals. Classroom assistants record one rubric score for each goal during a selected session. The application organizes those observations, shows progress over time, and creates a teacher-reviewable monthly summary for parent conversations.
+Goal Observation Tracker is a private classroom data-collection application. A teacher creates student profiles and measurable goals. Classroom assistants record one rubric score for each goal during a selected session. The application organizes those observations, shows progress over time, and creates a teacher-reviewable monthly summary for parent conversations.
 
 The application also allows a teacher to assign a teaching strategy to a goal for a defined period. Assistants see the active strategy while scoring and record whether it was used as planned. The dashboard can then describe how outcomes differed across strategy periods, while clearly avoiding unsupported claims that a strategy caused an improvement.
 

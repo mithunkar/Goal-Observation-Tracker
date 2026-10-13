@@ -17,9 +17,9 @@ export default async function AccessDeniedPage({
         : "Ask a classroom teacher to send you an invitation link before trying again.";
   return (
     <main className="auth-shell">
-      <Link className="auth-brand" href="/" aria-label="Evidence Loop home">
-        <span className="brand-mark" aria-hidden="true">EL</span>
-        <span>Evidence Loop</span>
+      <Link className="auth-brand" href="/" aria-label="Goal Observation Tracker home">
+        <span className="brand-mark" aria-hidden="true">GO</span>
+        <span>Goal Observation Tracker</span>
       </Link>
 
       <section className="auth-surface" aria-labelledby="access-denied-title">

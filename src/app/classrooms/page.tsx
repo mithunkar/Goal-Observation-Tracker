@@ -29,7 +29,7 @@ export default async function ClassroomsPage() {
     <main className="auth-shell onboarding-shell">
       <section className="auth-surface" aria-labelledby="classrooms-title">
         <div className="auth-heading">
-          <p className="session-kicker">Evidence Loop</p>
+          <p className="session-kicker">Goal Observation Tracker</p>
           <h1 id="classrooms-title">Choose a classroom</h1>
           <p>Select the classroom you want to open.</p>
         </div>

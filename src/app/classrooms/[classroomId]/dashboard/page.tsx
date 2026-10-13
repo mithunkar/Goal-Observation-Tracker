@@ -24,9 +24,9 @@ export default async function DashboardPage({ params, searchParams }: { params: 
       <header className="dashboard-header">
         <Link className="demo-brand" href={classroomPath(classroomId)} aria-label="Student roster">
           <span className="brand-mark" aria-hidden="true">
-            EL
+            GO
           </span>
-          <span>Evidence Loop</span>
+          <span>Goal Observation Tracker</span>
         </Link>
         <ClassroomSwitcher classroomId={classroomId} classroomName={identity.workspaceName} />
         <div className="dashboard-account">

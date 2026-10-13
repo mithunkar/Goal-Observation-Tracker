@@ -1,10 +1,10 @@
-# SPED Evidence Loop
+# Goal Observation Tracker
 
-SPED Evidence Loop is a private, multi-classroom data-collection application
+Goal Observation Tracker is a private, multi-classroom data-collection application
 for recording student goal observations and tracking teaching strategies.
 Staff join through email-bound invitation links and authenticate with the
 matching Google account. See
-[`docs/SPED_EVIDENCE_LOOP_PRODUCT_REQUIREMENTS.md`](docs/SPED_EVIDENCE_LOOP_PRODUCT_REQUIREMENTS.md)
+[`docs/GOAL_OBSERVATION_TRACKER_PRODUCT_REQUIREMENTS.md`](docs/GOAL_OBSERVATION_TRACKER_PRODUCT_REQUIREMENTS.md)
 for the product requirements and implementation plan.
 
 ## Hosted classroom
