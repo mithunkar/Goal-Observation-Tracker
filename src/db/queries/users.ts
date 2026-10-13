@@ -1,99 +1,80 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
-import { approvedEmails, users, workspaces } from "@/db/schema";
+import {
+  classroomMemberships,
+  users,
+  workspaces,
+} from "@/db/schema";
 
-const applicationUserSelection = {
+const applicationIdentitySelection = {
   id: users.id,
-  workspaceId: users.workspaceId,
+  workspaceId: classroomMemberships.workspaceId,
+  workspaceName: workspaces.name,
   displayName: users.displayName,
   email: users.email,
-  role: users.role,
-  status: users.status,
+  role: classroomMemberships.role,
+  status: classroomMemberships.status,
 };
+
+export function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
 
 export function buildApplicationUserQuery(
   database: NodePgDatabase,
   userId: string,
+  workspaceId: string,
 ) {
   return database
-    .select(applicationUserSelection)
+    .select(applicationIdentitySelection)
     .from(users)
-    .where(eq(users.id, userId))
+    .innerJoin(
+      classroomMemberships,
+      eq(classroomMemberships.userId, users.id),
+    )
+    .innerJoin(workspaces, eq(workspaces.id, classroomMemberships.workspaceId))
+    .where(
+      and(
+        eq(users.id, userId),
+        eq(classroomMemberships.workspaceId, workspaceId),
+      ),
+    )
     .limit(1);
 }
 
 export async function findApplicationUser(
   database: NodePgDatabase,
   userId: string,
+  workspaceId: string,
 ) {
-  const [user] = await buildApplicationUserQuery(database, userId);
+  const [user] = await buildApplicationUserQuery(database, userId, workspaceId);
   return user ?? null;
 }
 
-export async function findWorkspaceTimezone(database: NodePgDatabase, workspaceId: string) {
+export async function listApplicationMemberships(
+  database: NodePgDatabase,
+  userId: string,
+) {
+  return database
+    .select(applicationIdentitySelection)
+    .from(users)
+    .innerJoin(
+      classroomMemberships,
+      eq(classroomMemberships.userId, users.id),
+    )
+    .innerJoin(workspaces, eq(workspaces.id, classroomMemberships.workspaceId))
+    .where(eq(users.id, userId));
+}
+
+export async function findWorkspaceTimezone(
+  database: NodePgDatabase,
+  workspaceId: string,
+) {
   const [workspace] = await database
     .select({ timezone: workspaces.timezone })
     .from(workspaces)
     .where(eq(workspaces.id, workspaceId))
     .limit(1);
   return workspace?.timezone ?? "America/Los_Angeles";
-}
-
-export function normalizeEmail(email: string) {
-  return email.trim().toLowerCase();
-}
-
-export async function isApprovedEmail(
-  database: NodePgDatabase,
-  email: string,
-) {
-  const [approvedEmail] = await database
-    .select({ email: approvedEmails.email })
-    .from(approvedEmails)
-    .where(eq(approvedEmails.email, normalizeEmail(email)))
-    .limit(1);
-
-  return Boolean(approvedEmail);
-}
-
-export async function provisionClassroomTeacher(
-  database: NodePgDatabase,
-  input: {
-    id: string;
-    email: string;
-    displayName: string;
-    workspaceId: string;
-  },
-) {
-  const email = normalizeEmail(input.email);
-  const existingUser = await findApplicationUser(database, input.id);
-
-  if (existingUser) {
-    return existingUser;
-  }
-
-  const [user] = await database
-    .insert(users)
-    .values({
-      id: input.id,
-      workspaceId: input.workspaceId,
-      displayName: input.displayName,
-      email,
-      role: "TEACHER",
-      status: "ACTIVE",
-    })
-    .onConflictDoNothing()
-    .returning(applicationUserSelection);
-
-  if (user) {
-    return user;
-  }
-
-  const concurrentUser = await findApplicationUser(database, input.id);
-  if (concurrentUser) {
-    return concurrentUser;
-  }
-
-  throw new Error("An approved email is already linked to another account.");
 }

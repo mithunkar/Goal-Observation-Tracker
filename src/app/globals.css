@@ -2670,3 +2670,27 @@ textarea {
 .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
 @media (max-width: 720px) { .snapshot-metrics { grid-template-columns: 1fr 1fr; }.stacked-chart-row { grid-template-columns: 1fr; gap: 6px; }.coverage-row { grid-template-columns: 80px 1fr; }.coverage-row > span:last-child { grid-column: 2; }.trend-chart { padding: 12px; } }
 @media print { .parent-report .report-card { break-inside: auto; }.parent-report .trend-chart, .parent-report .snapshot-metrics, .parent-report .strategy-summary { break-inside: avoid; }.trend-chart { border: 1px solid var(--line); }.parent-goal-list { display: block; } }
+
+/* Classroom membership and invitations */
+.classroom-name { color: var(--muted); font-size: 13px; font-weight: 800; }
+.classroom-switcher { position: relative; }
+.classroom-switcher summary { cursor: pointer; font-weight: 800; }
+.classroom-switcher nav { position: absolute; z-index: 5; top: calc(100% + 10px); min-width: 220px; padding: 8px; display: grid; gap: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: 0 12px 30px rgb(23 51 45 / 16%); }
+.classroom-switcher nav a { padding: 10px 12px; border-radius: 8px; }
+.classroom-switcher nav a[aria-current="page"] { background: var(--paper); font-weight: 800; }
+.classroom-list { display: grid; gap: 12px; }
+.staff-shell { padding-bottom: 72px; }
+.staff-shell > section { width: min(880px, calc(100% - 40px)); margin: 0 auto 30px; }
+.staff-invite { width: min(880px, calc(100% - 40px)); }
+.invite-form { max-width: none; }
+.invitation-result { margin-top: 16px; padding: 16px; display: grid; gap: 10px; border-radius: 12px; background: var(--paper); }
+.invitation-result label { display: grid; gap: 6px; font-weight: 800; }
+.invitation-result input { width: 100%; min-height: 42px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+.invitation-result p { margin: 0; color: var(--muted); font-size: 12px; }
+.staff-list { padding: 0; display: grid; gap: 10px; list-style: none; }
+.staff-list > li { padding: 16px 18px; display: flex; justify-content: space-between; gap: 20px; align-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.staff-list > li > div:first-child { display: grid; gap: 3px; }
+.staff-list span { color: var(--muted); font-size: 13px; }
+.staff-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.invitation-regenerate { display: grid; gap: 8px; }
+@media (max-width: 720px) { .classroom-switcher nav { right: 0; }.staff-list > li { align-items: stretch; flex-direction: column; }.staff-actions { justify-content: flex-start; } }

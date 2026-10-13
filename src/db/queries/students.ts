@@ -6,7 +6,7 @@ import {
   AuthorizationError,
   canManageClassroom,
 } from "@/auth/authorization";
-import { students, userStudentAssignments } from "@/db/schema";
+import { students } from "@/db/schema";
 import type { CreateStudentInput, UpdateStudentInput } from "@/domain/student";
 
 const studentSelection = {
@@ -22,35 +22,13 @@ export function buildAuthorizedStudentListQuery(
   database: NodePgDatabase,
   actor: AuthorizationActor,
 ) {
-  if (actor.role === "TEACHER") {
-    return database
-      .select(studentSelection)
-      .from(students)
-      .where(
-        and(
-          eq(students.workspaceId, actor.workspaceId),
-          eq(students.status, "ACTIVE"),
-        ),
-      )
-      .orderBy(asc(students.displayName));
-  }
-
   return database
     .select(studentSelection)
     .from(students)
-    .innerJoin(
-      userStudentAssignments,
-      and(
-        eq(userStudentAssignments.workspaceId, students.workspaceId),
-        eq(userStudentAssignments.studentId, students.id),
-      ),
-    )
     .where(
       and(
         eq(students.workspaceId, actor.workspaceId),
         eq(students.status, "ACTIVE"),
-        eq(userStudentAssignments.workspaceId, actor.workspaceId),
-        eq(userStudentAssignments.userId, actor.id),
       ),
     )
     .orderBy(asc(students.displayName));
@@ -78,30 +56,10 @@ export function buildAuthorizedStudentQuery(
     eq(students.status, "ACTIVE"),
   ];
 
-  if (actor.role === "TEACHER") {
-    return database
-      .select(studentSelection)
-      .from(students)
-      .where(and(...baseConditions))
-      .limit(1);
-  }
-
   return database
     .select(studentSelection)
     .from(students)
-    .innerJoin(
-      userStudentAssignments,
-      and(
-        eq(userStudentAssignments.workspaceId, students.workspaceId),
-        eq(userStudentAssignments.studentId, students.id),
-      ),
-    )
-    .where(
-      and(
-        ...baseConditions,
-        eq(userStudentAssignments.userId, actor.id),
-      ),
-    )
+    .where(and(...baseConditions))
     .limit(1);
 }
 

@@ -25,7 +25,6 @@ export async function loadAuthorizedStudentRoster(
     students: filterAuthorizedStudents(
       actor,
       syntheticSeedData.students,
-      syntheticSeedData.userStudentAssignments,
     ).map(({ id, workspaceId, displayName, group, status }) => ({
       id,
       workspaceId,

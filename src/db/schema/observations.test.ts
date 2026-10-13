@@ -47,7 +47,7 @@ describe("session and observation database schema", () => {
       },
       sessions_recorder_foreign_key: {
         columns: ["workspace_id", "recorded_by_user_id"],
-        foreignColumns: ["workspace_id", "id"],
+        foreignColumns: ["workspace_id", "user_id"],
       },
     });
   });

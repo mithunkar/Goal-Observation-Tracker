@@ -7,7 +7,6 @@ import {
   goalStrategyAssignments,
   strategies,
   students,
-  userStudentAssignments,
 } from "@/db/schema";
 
 const scoringSelection = {
@@ -57,23 +56,6 @@ export function buildAuthorizedScoringContextQuery(
   actor: AuthorizationActor,
   studentId: string,
 ) {
-  if (actor.role === "TEACHER") {
-    return database
-      .select(scoringSelection)
-      .from(goals)
-      .innerJoin(
-        students,
-        and(
-          eq(students.workspaceId, goals.workspaceId),
-          eq(students.id, goals.studentId),
-        ),
-      )
-      .leftJoin(goalStrategyAssignments, strategyAssignmentJoin)
-      .leftJoin(strategies, strategyJoin)
-      .where(activeGoalConditions(actor, studentId))
-      .orderBy(asc(goals.position));
-  }
-
   return database
     .select(scoringSelection)
     .from(goals)
@@ -82,14 +64,6 @@ export function buildAuthorizedScoringContextQuery(
       and(
         eq(students.workspaceId, goals.workspaceId),
         eq(students.id, goals.studentId),
-      ),
-    )
-    .innerJoin(
-      userStudentAssignments,
-      and(
-        eq(userStudentAssignments.workspaceId, students.workspaceId),
-        eq(userStudentAssignments.studentId, students.id),
-        eq(userStudentAssignments.userId, actor.id),
       ),
     )
     .leftJoin(goalStrategyAssignments, strategyAssignmentJoin)

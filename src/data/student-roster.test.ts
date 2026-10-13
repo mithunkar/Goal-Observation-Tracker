@@ -1,15 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { SYNTHETIC_SEED_IDS, syntheticSeedData } from "@/db/seed-data";
+import { SYNTHETIC_SEED_IDS, syntheticIdentity } from "@/db/seed-data";
 import { loadAuthorizedStudentRoster } from "@/data/student-roster";
 
-const identity = (userId: string) => {
-  const user = syntheticSeedData.users.find((candidate) => candidate.id === userId);
-  if (!user) {
-    throw new Error("Missing synthetic identity.");
-  }
-  return user;
-};
+const identity = syntheticIdentity;
 
 describe("development student roster", () => {
   it("shows the teacher all three synthetic students", async () => {
@@ -25,22 +19,19 @@ describe("development student roster", () => {
     ]);
   });
 
-  it("shows the assigned assistant only River and Sage", async () => {
+  it("shows an assistant the full classroom roster", async () => {
     const roster = await loadAuthorizedStudentRoster(
       identity(SYNTHETIC_SEED_IDS.assignedAssistant),
     );
 
-    expect(roster.students.map((student) => student.displayName)).toEqual([
-      "River",
-      "Sage",
-    ]);
+    expect(roster.students.map((student) => student.displayName)).toEqual(["River", "Sage", "Micah"]);
   });
 
-  it("shows the unassigned assistant an empty roster", async () => {
+  it("does not require per-student assistant assignments", async () => {
     const roster = await loadAuthorizedStudentRoster(
       identity(SYNTHETIC_SEED_IDS.unassignedAssistant),
     );
 
-    expect(roster.students).toEqual([]);
+    expect(roster.students.map((student) => student.displayName)).toEqual(["River", "Sage", "Micah"]);
   });
 });

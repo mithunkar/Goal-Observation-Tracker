@@ -24,6 +24,11 @@ const updatedAt = timestamp("updated_at", { withTimezone: true })
 
 export const userRole = pgEnum("user_role", ["TEACHER", "ASSISTANT"]);
 export const userStatus = pgEnum("user_status", ["ACTIVE", "INACTIVE"]);
+export const invitationStatus = pgEnum("invitation_status", [
+  "PENDING",
+  "ACCEPTED",
+  "REVOKED",
+]);
 export const studentStatus = pgEnum("student_status", [
   "ACTIVE",
   "ARCHIVED",
@@ -56,40 +61,87 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    workspaceId: uuid("workspace_id")
-      .notNull()
-      .references(() => workspaces.id, { onDelete: "restrict" }),
     displayName: text("display_name").notNull(),
     email: text("email").notNull(),
-    role: userRole("role").notNull(),
-    status: userStatus("status").default("ACTIVE").notNull(),
     createdAt,
     updatedAt,
   },
   (table) => [
-    uniqueIndex("users_workspace_email_unique").on(
-      table.workspaceId,
-      table.email,
-    ),
-    uniqueIndex("users_workspace_id_id_unique").on(
-      table.workspaceId,
-      table.id,
+    uniqueIndex("users_email_unique").on(table.email),
+    check("users_email_normalized", sql`${table.email} = lower(trim(${table.email}))`),
+  ],
+);
+
+export const classroomMemberships = pgTable(
+  "classroom_memberships",
+  {
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "restrict" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    role: userRole("role").notNull(),
+    status: userStatus("status").default("ACTIVE").notNull(),
+    joinedAt: timestamp("joined_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt,
+  },
+  (table) => [
+    primaryKey({
+      name: "classroom_memberships_primary_key",
+      columns: [table.workspaceId, table.userId],
+    }),
+    index("classroom_memberships_user_status_index").on(
+      table.userId,
+      table.status,
     ),
   ],
 );
 
-/**
- * Private enrollment list for the one classroom workspace. Entries are managed
- * in Supabase Studio; they are never exposed through the browser Data API.
- */
-export const approvedEmails = pgTable(
-  "approved_emails",
+export const classroomInvitations = pgTable(
+  "classroom_invitations",
   {
-    email: text("email").primaryKey(),
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "restrict" }),
+    email: text("email").notNull(),
+    role: userRole("role").default("TEACHER").notNull(),
+    tokenHash: text("token_hash").unique(),
+    status: invitationStatus("status").default("PENDING").notNull(),
+    invitedByUserId: uuid("invited_by_user_id"),
+    acceptedByUserId: uuid("accepted_by_user_id").references(() => users.id, {
+      onDelete: "restrict",
+    }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
     createdAt,
+    updatedAt,
   },
   (table) => [
-    check("approved_emails_email_normalized", sql`${table.email} = lower(trim(${table.email}))`),
+    foreignKey({
+      name: "classroom_invitations_inviter_foreign_key",
+      columns: [table.workspaceId, table.invitedByUserId],
+      foreignColumns: [
+        classroomMemberships.workspaceId,
+        classroomMemberships.userId,
+      ],
+    }).onDelete("restrict"),
+    uniqueIndex("classroom_invitations_pending_email_unique")
+      .on(table.workspaceId, table.email)
+      .where(sql`${table.status} = 'PENDING'`),
+    index("classroom_invitations_email_status_index").on(
+      table.email,
+      table.status,
+    ),
+    check("classroom_invitations_email_normalized", sql`${table.email} = lower(trim(${table.email}))`),
+    check(
+      "classroom_invitations_state_consistency",
+      sql`(${table.status} = 'PENDING' and ${table.acceptedAt} is null and ${table.acceptedByUserId} is null and ${table.revokedAt} is null) or (${table.status} = 'ACCEPTED' and ${table.acceptedAt} is not null and ${table.acceptedByUserId} is not null and ${table.revokedAt} is null) or (${table.status} = 'REVOKED' and ${table.revokedAt} is not null and ${table.acceptedAt} is null and ${table.acceptedByUserId} is null)`,
+    ),
   ],
 );
 
@@ -124,33 +176,6 @@ export const students = pgTable(
       table.status,
       table.displayName,
     ),
-  ],
-);
-
-export const userStudentAssignments = pgTable(
-  "user_student_assignments",
-  {
-    workspaceId: uuid("workspace_id").notNull(),
-    userId: uuid("user_id").notNull(),
-    studentId: uuid("student_id").notNull(),
-    createdAt,
-  },
-  (table) => [
-    primaryKey({
-      name: "user_student_assignments_primary_key",
-      columns: [table.userId, table.studentId],
-    }),
-    foreignKey({
-      name: "user_student_assignments_user_foreign_key",
-      columns: [table.workspaceId, table.userId],
-      foreignColumns: [users.workspaceId, users.id],
-    }).onDelete("cascade"),
-    foreignKey({
-      name: "user_student_assignments_student_foreign_key",
-      columns: [table.workspaceId, table.studentId],
-      foreignColumns: [students.workspaceId, students.id],
-    }).onDelete("cascade"),
-    index("user_student_assignments_student_index").on(table.studentId),
   ],
 );
 
@@ -234,7 +259,10 @@ export const goalRevisions = pgTable(
     foreignKey({
       name: "goal_revisions_creator_foreign_key",
       columns: [table.workspaceId, table.createdByUserId],
-      foreignColumns: [users.workspaceId, users.id],
+      foreignColumns: [
+        classroomMemberships.workspaceId,
+        classroomMemberships.userId,
+      ],
     }).onDelete("restrict"),
     check("goal_revisions_version_positive", sql`${table.version} > 0`),
     check(

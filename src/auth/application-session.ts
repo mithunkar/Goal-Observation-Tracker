@@ -1,19 +1,22 @@
 import "server-only";
 
 import type { User } from "@supabase/supabase-js";
-import { cache } from "react";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import type { AuthorizationActor } from "@/auth/authorization";
-import { CLASSROOM_WORKSPACE_ID } from "@/classroom/classroom";
+import {
+  acceptClassroomInvitation,
+  acceptLegacyClassroomInvitation,
+} from "@/db/queries/invitations";
 import {
   findApplicationUser,
-  isApprovedEmail,
-  provisionClassroomTeacher,
+  listApplicationMemberships,
 } from "@/db/queries/users";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ApplicationIdentity = AuthorizationActor & {
+  workspaceName: string;
   displayName: string;
   email: string;
 };
@@ -42,44 +45,73 @@ export const getVerifiedSupabaseUser = cache(
   },
 );
 
+export const getApplicationMemberships = cache(
+  async (): Promise<ApplicationIdentity[]> => {
+    const supabaseUser = await getVerifiedSupabaseUser();
+    if (!supabaseUser || !process.env.DATABASE_URL) {
+      return [];
+    }
+
+    const { db } = await import("@/db/client");
+    return listApplicationMemberships(db, supabaseUser.id);
+  },
+);
+
 export const getCurrentApplicationIdentity = cache(
-  async (): Promise<ApplicationIdentity | null> => {
+  async (workspaceId?: string): Promise<ApplicationIdentity | null> => {
     const supabaseUser = await getVerifiedSupabaseUser();
     if (!supabaseUser || !process.env.DATABASE_URL) {
       return null;
     }
 
     const { db } = await import("@/db/client");
-    const [approved, identity] = await Promise.all([
-      isApprovedEmail(db, supabaseUser.email),
-      findApplicationUser(db, supabaseUser.id),
-    ]);
-
-    if (!approved || !identity || identity.status !== "ACTIVE") {
-      return null;
+    if (workspaceId) {
+      const identity = await findApplicationUser(
+        db,
+        supabaseUser.id,
+        workspaceId,
+      );
+      return identity?.status === "ACTIVE" ? identity : null;
     }
 
-    return identity;
+    const memberships = await listApplicationMemberships(db, supabaseUser.id);
+    const activeMemberships = memberships.filter(
+      (membership) => membership.status === "ACTIVE",
+    );
+    return activeMemberships.length === 1 ? activeMemberships[0] : null;
   },
 );
 
-export async function requireCurrentApplicationIdentity(): Promise<ApplicationIdentity> {
+export async function requireCurrentApplicationIdentity(
+  workspaceId?: string,
+): Promise<ApplicationIdentity> {
   const supabaseUser = await getVerifiedSupabaseUser();
   if (!supabaseUser) {
     redirect("/sign-in");
   }
 
-  const identity = await getCurrentApplicationIdentity();
+  const identity = await getCurrentApplicationIdentity(workspaceId);
   if (!identity) {
-    redirect("/access-denied");
+    redirect(workspaceId ? "/access-denied?reason=classroom" : "/classrooms");
   }
 
   return identity;
 }
 
-/** Creates the classroom profile from the user returned by the OAuth exchange. */
+function googleDisplayName(user: User) {
+  const metadata = user.user_metadata ?? {};
+  return (
+    valueAsString(metadata.full_name)?.trim() ||
+    valueAsString(metadata.name)?.trim() ||
+    user.email?.split("@")[0] ||
+    "Classroom staff"
+  );
+}
+
+/** Provisions or joins classrooms after Supabase verifies the Google account. */
 export async function provisionGoogleUser(
   user: User | null,
+  invitationToken?: string | null,
 ): Promise<ApplicationIdentity | null> {
   if (
     !user?.email ||
@@ -89,22 +121,24 @@ export async function provisionGoogleUser(
     return null;
   }
 
-  const metadata = user.user_metadata ?? {};
-  const displayName =
-    valueAsString(metadata.full_name)?.trim() ||
-    valueAsString(metadata.name)?.trim() ||
-    user.email.split("@")[0] ||
-    "Classroom staff";
-
-  const { db } = await import("@/db/client");
-  if (!(await isApprovedEmail(db, user.email))) {
-    return null;
-  }
-
-  return provisionClassroomTeacher(db, {
+  const verifiedUser = {
     id: user.id,
     email: user.email,
-    displayName,
-    workspaceId: CLASSROOM_WORKSPACE_ID,
-  });
+    displayName: googleDisplayName(user),
+  };
+  const { db } = await import("@/db/client");
+
+  if (invitationToken) {
+    return acceptClassroomInvitation(db, invitationToken, verifiedUser);
+  }
+
+  const memberships = await listApplicationMemberships(db, user.id);
+  const activeMembership = memberships.find(
+    (membership) => membership.status === "ACTIVE",
+  );
+  if (activeMembership) {
+    return activeMembership;
+  }
+
+  return acceptLegacyClassroomInvitation(db, verifiedUser);
 }

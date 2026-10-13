@@ -11,7 +11,7 @@ import {
   studentStatus,
   userRole,
   userStatus,
-  userStudentAssignments,
+  classroomMemberships,
 } from "@/db/schema";
 
 describe("core database schema", () => {
@@ -38,33 +38,11 @@ describe("core database schema", () => {
     ]);
   });
 
-  it("prevents cross-workspace student assignments", () => {
-    const assignmentConfig = getTableConfig(userStudentAssignments);
-    const foreignKeys = Object.fromEntries(
-      assignmentConfig.foreignKeys.map((key) => {
-        const reference = key.reference();
-        return [
-          key.getName(),
-          {
-            columns: reference.columns.map((column) => column.name),
-            foreignColumns: reference.foreignColumns.map(
-              (column) => column.name,
-            ),
-          },
-        ];
-      }),
-    );
-
-    expect(foreignKeys).toMatchObject({
-      user_student_assignments_user_foreign_key: {
-        columns: ["workspace_id", "user_id"],
-        foreignColumns: ["workspace_id", "id"],
-      },
-      user_student_assignments_student_foreign_key: {
-        columns: ["workspace_id", "student_id"],
-        foreignColumns: ["workspace_id", "id"],
-      },
-    });
+  it("stores one role per user and classroom", () => {
+    const membershipConfig = getTableConfig(classroomMemberships);
+    expect(
+      membershipConfig.primaryKeys[0]?.columns.map((column) => column.name),
+    ).toEqual(["workspace_id", "user_id"]);
   });
 
   it("keeps goals in the same workspace as their student", () => {

@@ -25,9 +25,24 @@ export async function seedSyntheticDevelopmentData(
           set: {
             displayName: user.displayName,
             email: user.email,
-            role: user.role,
-            status: user.status,
             updatedAt: user.updatedAt,
+          },
+        });
+    }
+
+    for (const membership of syntheticSeedData.classroomMemberships) {
+      await transaction
+        .insert(schema.classroomMemberships)
+        .values(membership)
+        .onConflictDoUpdate({
+          target: [
+            schema.classroomMemberships.workspaceId,
+            schema.classroomMemberships.userId,
+          ],
+          set: {
+            role: membership.role,
+            status: membership.status,
+            updatedAt: membership.updatedAt,
           },
         });
     }
@@ -46,13 +61,6 @@ export async function seedSyntheticDevelopmentData(
             updatedAt: student.updatedAt,
           },
         });
-    }
-
-    for (const assignment of syntheticSeedData.userStudentAssignments) {
-      await transaction
-        .insert(schema.userStudentAssignments)
-        .values(assignment)
-        .onConflictDoNothing();
     }
 
     for (const goal of syntheticSeedData.goals) {

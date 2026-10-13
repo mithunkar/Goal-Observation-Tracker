@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { getCurrentApplicationIdentity } from "@/auth/application-session";
+import { getApplicationMemberships } from "@/auth/application-session";
 import { signInWithGoogle } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -21,9 +21,9 @@ const errorMessage = (error: string | undefined) => {
 };
 
 export default async function SignInPage({ searchParams }: SignInPageProps) {
-  const identity = await getCurrentApplicationIdentity();
-  if (identity) {
-    redirect("/dashboard");
+  const memberships = await getApplicationMemberships();
+  if (memberships.some((membership) => membership.status === "ACTIVE")) {
+    redirect("/classrooms");
   }
 
   const { error } = await searchParams;
@@ -39,7 +39,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       <section className="auth-surface" aria-labelledby="sign-in-title">
         <div className="auth-heading">
           <h1 id="sign-in-title">Sign in to your classroom</h1>
-          <p>Only classroom staff whose Google email has been approved can enter.</p>
+          <p>Use the Google account named in your classroom invitation.</p>
         </div>
         <form className="account-form" action={signInWithGoogle}>
           {message ? <p className="form-error" role="alert">{message}</p> : null}

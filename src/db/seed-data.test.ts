@@ -6,26 +6,16 @@ import {
 } from "@/db/seed-data";
 
 describe("synthetic development seed data", () => {
-  it("defines one teacher and assigned and unassigned assistants", () => {
+  it("defines one teacher and two assistants", () => {
     expect(syntheticSeedData.users).toHaveLength(3);
     expect(
-      syntheticSeedData.users.filter((user) => user.role === "TEACHER"),
+      syntheticSeedData.classroomMemberships.filter((membership) => membership.role === "TEACHER"),
     ).toHaveLength(1);
     expect(
-      syntheticSeedData.users.filter((user) => user.role === "ASSISTANT"),
+      syntheticSeedData.classroomMemberships.filter((membership) => membership.role === "ASSISTANT"),
     ).toHaveLength(2);
 
-    const assignedUserIds = new Set<string>(
-      syntheticSeedData.userStudentAssignments.map(
-        (assignment) => assignment.userId,
-      ),
-    );
-    expect(assignedUserIds.has(SYNTHETIC_SEED_IDS.assignedAssistant)).toBe(
-      true,
-    );
-    expect(assignedUserIds.has(SYNTHETIC_SEED_IDS.unassignedAssistant)).toBe(
-      false,
-    );
+    expect(syntheticSeedData.classroomMemberships).toHaveLength(3);
   });
 
   it("provides three fictional students with representative active goals", () => {
@@ -45,9 +35,8 @@ describe("synthetic development seed data", () => {
 
   it("keeps every record inside the synthetic workspace", () => {
     const workspaceScopedRecords = [
-      ...syntheticSeedData.users,
+      ...syntheticSeedData.classroomMemberships,
       ...syntheticSeedData.students,
-      ...syntheticSeedData.userStudentAssignments,
       ...syntheticSeedData.goals,
       ...syntheticSeedData.strategies,
       ...syntheticSeedData.goalStrategyAssignments,

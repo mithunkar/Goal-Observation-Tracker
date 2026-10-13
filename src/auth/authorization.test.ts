@@ -4,6 +4,7 @@ import {
   assertCanViewStudent,
   AuthorizationError,
   canCreateStudentSession,
+  canInviteMembers,
   canManageClassroom,
   canViewStudent,
   filterAuthorizedStudents,
@@ -12,45 +13,39 @@ import {
 import {
   SYNTHETIC_SEED_IDS,
   syntheticSeedData,
+  syntheticIdentity,
 } from "@/db/seed-data";
 
-const actor = (userId: string): AuthorizationActor => {
-  const user = syntheticSeedData.users.find((candidate) => candidate.id === userId);
-  if (!user) {
-    throw new Error("Missing synthetic test user.");
-  }
-
-  return user;
-};
+const actor = (userId: string): AuthorizationActor => syntheticIdentity(userId);
 
 const river = syntheticSeedData.students[0];
 const micah = syntheticSeedData.students[2];
-const assignments = syntheticSeedData.userStudentAssignments;
-
 describe("student authorization", () => {
   it("allows an active teacher to view every student in the workspace", () => {
     const teacher = actor(SYNTHETIC_SEED_IDS.teacher);
 
     expect(
-      filterAuthorizedStudents(teacher, syntheticSeedData.students, assignments),
+      filterAuthorizedStudents(teacher, syntheticSeedData.students),
     ).toEqual(syntheticSeedData.students);
     expect(canManageClassroom(teacher)).toBe(true);
+    expect(canInviteMembers(teacher)).toBe(true);
   });
 
-  it("limits an assistant to explicitly assigned students", () => {
+  it("gives an assistant the same classroom access without invitation rights", () => {
     const assistant = actor(SYNTHETIC_SEED_IDS.assignedAssistant);
 
-    expect(canViewStudent(assistant, river, assignments)).toBe(true);
-    expect(canViewStudent(assistant, micah, assignments)).toBe(false);
-    expect(canManageClassroom(assistant)).toBe(false);
+    expect(canViewStudent(assistant, river)).toBe(true);
+    expect(canViewStudent(assistant, micah)).toBe(true);
+    expect(canManageClassroom(assistant)).toBe(true);
+    expect(canInviteMembers(assistant)).toBe(false);
   });
 
-  it("gives an unassigned assistant no student access", () => {
+  it("gives every active assistant access to the classroom roster", () => {
     const assistant = actor(SYNTHETIC_SEED_IDS.unassignedAssistant);
 
     expect(
-      filterAuthorizedStudents(assistant, syntheticSeedData.students, assignments),
-    ).toEqual([]);
+      filterAuthorizedStudents(assistant, syntheticSeedData.students),
+    ).toEqual(syntheticSeedData.students);
   });
 
   it("rejects cross-workspace access even for a teacher", () => {
@@ -60,7 +55,6 @@ describe("student authorization", () => {
       canViewStudent(
         teacher,
         { ...river, workspaceId: "90000000-0000-4000-8000-000000000001" },
-        assignments,
       ),
     ).toBe(false);
   });
@@ -71,8 +65,9 @@ describe("student authorization", () => {
       status: "INACTIVE" as const,
     };
 
-    expect(canViewStudent(inactiveTeacher, river, assignments)).toBe(false);
+    expect(canViewStudent(inactiveTeacher, river)).toBe(false);
     expect(canManageClassroom(inactiveTeacher)).toBe(false);
+    expect(canInviteMembers(inactiveTeacher)).toBe(false);
   });
 
   it("prevents new sessions for archived students", () => {
@@ -82,16 +77,15 @@ describe("student authorization", () => {
       canCreateStudentSession(
         teacher,
         { ...river, status: "ARCHIVED" },
-        assignments,
       ),
     ).toBe(false);
   });
 
   it("throws a stable authorization error when access is denied", () => {
-    const assistant = actor(SYNTHETIC_SEED_IDS.assignedAssistant);
+    const outsider = { ...actor(SYNTHETIC_SEED_IDS.assignedAssistant), workspaceId: "90000000-0000-4000-8000-000000000001" };
 
     expect(() =>
-      assertCanViewStudent(assistant, micah, assignments),
+      assertCanViewStudent(outsider, micah),
     ).toThrow(AuthorizationError);
   });
 });

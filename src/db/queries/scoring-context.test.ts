@@ -33,7 +33,7 @@ describe("authorized scoring context query", () => {
     expect(query.params).toContain(SYNTHETIC_SEED_IDS.river);
   });
 
-  it("requires the assistant assignment in the scoring query", () => {
+  it("uses the same classroom-scoped scoring query for assistants", () => {
     const actor: AuthorizationActor = {
       ...baseActor,
       id: SYNTHETIC_SEED_IDS.assignedAssistant,
@@ -45,7 +45,7 @@ describe("authorized scoring context query", () => {
       SYNTHETIC_SEED_IDS.river,
     ).toSQL();
 
-    expect(query.sql).toContain('inner join "user_student_assignments"');
-    expect(query.params).toContain(SYNTHETIC_SEED_IDS.assignedAssistant);
+    expect(query.sql).not.toContain('user_student_assignments');
+    expect(query.params).toContain(SYNTHETIC_SEED_IDS.workspace);
   });
 });

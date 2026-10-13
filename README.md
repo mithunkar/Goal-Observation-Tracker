@@ -1,16 +1,16 @@
 # SPED Evidence Loop
 
-SPED Evidence Loop is a private classroom data-collection application for
-recording student goal observations and tracking teaching strategies. Only
-Google accounts entered in the Supabase `approved_emails` table can create an
-account or access the one classroom. See
+SPED Evidence Loop is a private, multi-classroom data-collection application
+for recording student goal observations and tracking teaching strategies.
+Staff join through email-bound invitation links and authenticate with the
+matching Google account. See
 [`docs/SPED_EVIDENCE_LOOP_PRODUCT_REQUIREMENTS.md`](docs/SPED_EVIDENCE_LOOP_PRODUCT_REQUIREMENTS.md)
 for the product requirements and implementation plan.
 
 ## Hosted classroom
 
-The Vercel deployment opens at the sign-in screen. An approved staff member
-uses Google to access the persistent Supabase-backed classroom.
+The Vercel deployment opens at the sign-in screen. Invited staff use Google to
+access their persistent Supabase-backed classrooms.
 
 ## Local development
 
@@ -67,13 +67,13 @@ The application connects to Supabase only through the server-side PostgreSQL
 connection. Its public browser does not receive database credentials or direct
 Data API table access.
 
-### Google sign-in and classroom allowlist
+### Google sign-in and classroom invitations
 
 Before enabling authentication in a hosted environment:
 
-1. Apply the database migration, then add each permitted, lower-case email to
-   `public.approved_emails` in Supabase Studio. Add your own email before
-   deploying or nobody will be able to enter.
+1. Apply the database migration. Existing users become members of their current
+   classroom, and unused entries from the old allowlist remain eligible as
+   legacy Bears invitations.
 2. In Google Cloud, create a Web OAuth client. Add the production and local
    site URLs as authorized JavaScript origins and add Supabase's callback URL
    from **Authentication → Providers → Google** as an authorized redirect URI.
@@ -86,9 +86,20 @@ Before enabling authentication in a hosted environment:
    `NEXT_PUBLIC_SITE_URL` in Vercel. The redirect URLs must include
    `<site-url>/auth/callback`.
 
-Removing an email from `approved_emails` blocks that account on its next page
-request or server action. The old public teacher record is retained as inactive
-historical authorship.
+Create future classrooms from a trusted development environment:
+
+```bash
+npm run classroom:create -- \
+  --name "Owls" \
+  --timezone "America/Los_Angeles" \
+  --teacher-email "teacher@example.org"
+```
+
+The command requires `DATABASE_MIGRATION_URL` and `NEXT_PUBLIC_SITE_URL`, then
+prints the first teacher's single-use, seven-day invitation link. Teachers can
+invite additional Teachers or Assistants from the classroom Staff page; both
+roles have the same classroom access, but only Teachers can manage invitations.
+The app stores only invitation-token hashes.
 
 ## Quality checks
 

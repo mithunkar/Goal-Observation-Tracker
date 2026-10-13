@@ -59,7 +59,7 @@ export function buildAnalyticsObservationQuery(
     .innerJoin(sessions, and(eq(sessions.workspaceId, observations.workspaceId), eq(sessions.id, observations.sessionId)))
     .innerJoin(students, and(eq(students.workspaceId, observations.workspaceId), eq(students.id, observations.studentId)))
     .innerJoin(goalRevisions, and(eq(goalRevisions.workspaceId, observations.workspaceId), eq(goalRevisions.goalId, observations.goalId), eq(goalRevisions.version, observations.goalVersion)))
-    .innerJoin(users, and(eq(users.workspaceId, sessions.workspaceId), eq(users.id, sessions.recordedByUserId)))
+    .innerJoin(users, eq(users.id, sessions.recordedByUserId))
     .leftJoin(goalStrategyAssignments, and(eq(goalStrategyAssignments.workspaceId, observations.workspaceId), eq(goalStrategyAssignments.id, observations.strategyAssignmentId)))
     .leftJoin(strategies, and(eq(strategies.workspaceId, goalStrategyAssignments.workspaceId), eq(strategies.id, goalStrategyAssignments.strategyId), eq(strategies.version, observations.strategyVersion)))
     .where(and(...conditions))

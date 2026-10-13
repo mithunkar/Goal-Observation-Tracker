@@ -5,7 +5,7 @@ import { buildAnalyticsObservationQuery } from "./analytics";
 import { SYNTHETIC_SEED_IDS } from "@/db/seed-data";
 
 describe("analytics observation query", () => {
-  it("is teacher-only and scopes filter reads to the current workspace", () => {
+  it("scopes teacher filter reads to the current workspace", () => {
     const database = drizzle.mock();
     const query = buildAnalyticsObservationQuery(database, {
       id: SYNTHETIC_SEED_IDS.teacher, workspaceId: SYNTHETIC_SEED_IDS.workspace, role: "TEACHER", status: "ACTIVE",
@@ -18,9 +18,10 @@ describe("analytics observation query", () => {
     expect(query.params).toContain("AM_MW");
   });
 
-  it("rejects assistant analytics requests", () => {
-    expect(() => buildAnalyticsObservationQuery(drizzle.mock(), {
+  it("allows assistant analytics with the same workspace scope", () => {
+    const query = buildAnalyticsObservationQuery(drizzle.mock(), {
       id: SYNTHETIC_SEED_IDS.assignedAssistant, workspaceId: SYNTHETIC_SEED_IDS.workspace, role: "ASSISTANT", status: "ACTIVE",
-    }, { start: new Date(), end: new Date() })).toThrow("not authorized");
+    }, { start: new Date(), end: new Date() }).toSQL();
+    expect(query.params).toContain(SYNTHETIC_SEED_IDS.workspace);
   });
 });

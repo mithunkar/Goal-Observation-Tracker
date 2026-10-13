@@ -33,7 +33,7 @@ import type {
   StrategyFidelityStatus,
 } from "@/domain/scoring";
 import type { SessionSubmissionInput } from "@/domain/session-submission";
-import type { ScoringSubmissionResult } from "@/app/students/[studentId]/sessions/new/actions";
+import type { ScoringSubmissionResult } from "@/app/classrooms/[classroomId]/students/[studentId]/sessions/new/actions";
 import { ScoringKey } from "@/app/scoring-key";
 
 import { SessionReview } from "./session-review";
@@ -52,6 +52,7 @@ type ScoringSessionProps = {
   persistSubmission: (
     input: SessionSubmissionInput,
   ) => Promise<ScoringSubmissionResult>;
+  returnHref?: string;
 };
 
 type SessionMode = "entry" | "review" | "submitted";
@@ -62,6 +63,7 @@ export function ScoringSession({
   noDataReasons,
   fidelityStatuses,
   persistSubmission,
+  returnHref = "/dashboard",
 }: ScoringSessionProps) {
   const storedDraftSnapshot = useSyncExternalStore(
     subscribeToDemoDraft,
@@ -506,7 +508,7 @@ export function ScoringSession({
             Record another session
           </button>
           {databaseSubmission ? (
-            <Link className="submission-history-link" href="/dashboard">
+            <Link className="submission-history-link" href={returnHref}>
               Return to your students
             </Link>
           ) : null}

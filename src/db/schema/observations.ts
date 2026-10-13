@@ -12,7 +12,12 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { goalRevisions, goals, students, users } from "./core";
+import {
+  classroomMemberships,
+  goalRevisions,
+  goals,
+  students,
+} from "./core";
 import { goalStrategyAssignments } from "./strategies";
 
 const createdAt = timestamp("created_at", { withTimezone: true })
@@ -77,7 +82,10 @@ export const sessions = pgTable(
     foreignKey({
       name: "sessions_recorder_foreign_key",
       columns: [table.workspaceId, table.recordedByUserId],
-      foreignColumns: [users.workspaceId, users.id],
+      foreignColumns: [
+        classroomMemberships.workspaceId,
+        classroomMemberships.userId,
+      ],
     }).onDelete("restrict"),
     index("sessions_student_occurred_at_index").on(
       table.workspaceId,

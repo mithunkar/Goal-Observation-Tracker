@@ -97,7 +97,6 @@ export async function loadAuthorizedScoringContext(
     !canCreateStudentSession(
       actor,
       student,
-      syntheticSeedData.userStudentAssignments,
     )
   ) {
     return null;

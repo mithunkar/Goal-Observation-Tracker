@@ -14,7 +14,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { goals, users } from "./core";
+import { classroomMemberships, goals } from "./core";
 
 const createdAt = timestamp("created_at", { withTimezone: true })
   .defaultNow()
@@ -59,7 +59,10 @@ export const strategies = pgTable(
     foreignKey({
       name: "strategies_creator_foreign_key",
       columns: [table.workspaceId, table.createdByUserId],
-      foreignColumns: [users.workspaceId, users.id],
+      foreignColumns: [
+        classroomMemberships.workspaceId,
+        classroomMemberships.userId,
+      ],
     }).onDelete("restrict"),
     index("strategies_workspace_status_index").on(
       table.workspaceId,

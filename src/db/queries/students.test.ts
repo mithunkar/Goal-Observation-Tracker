@@ -36,17 +36,11 @@ describe("authorized student queries", () => {
     expect(query.params).toEqual([SYNTHETIC_SEED_IDS.workspace, "ACTIVE"]);
   });
 
-  it("requires an assistant assignment inside the same workspace", () => {
+  it("gives an assistant the same workspace-scoped list", () => {
     const query = buildAuthorizedStudentListQuery(database, assistant).toSQL();
 
-    expect(query.sql).toContain('inner join "user_student_assignments"');
-    expect(query.sql).toContain('"user_student_assignments"."user_id"');
-    expect(query.params).toEqual([
-      SYNTHETIC_SEED_IDS.workspace,
-      "ACTIVE",
-      SYNTHETIC_SEED_IDS.workspace,
-      SYNTHETIC_SEED_IDS.assignedAssistant,
-    ]);
+    expect(query.sql).not.toContain('user_student_assignments');
+    expect(query.params).toEqual([SYNTHETIC_SEED_IDS.workspace, "ACTIVE"]);
   });
 
   it("scopes a single student to the teacher's workspace", () => {
@@ -77,12 +71,11 @@ describe("authorized student queries", () => {
     expect(query.params).toContain("Avery");
   });
 
-  it("prevents assistants from creating students", () => {
-    expect(() =>
-      buildCreateStudentQuery(database, assistant, {
-        displayName: "Avery", group: "AM_MW",
-      }),
-    ).toThrow("The current user is not authorized for this action.");
+  it("allows assistants to create students", () => {
+    const query = buildCreateStudentQuery(database, assistant, {
+      displayName: "Avery", group: "AM_MW",
+    }).toSQL();
+    expect(query.params).toContain(SYNTHETIC_SEED_IDS.workspace);
   });
 
   it("archives an active student inside the teacher's workspace", () => {
@@ -105,13 +98,12 @@ describe("authorized student queries", () => {
     expect(query.params).toContain("ACTIVE");
   });
 
-  it("prevents assistants from archiving students", () => {
-    expect(() =>
-      buildArchiveStudentQuery(
-        database,
-        assistant,
-        SYNTHETIC_SEED_IDS.river,
-      ),
-    ).toThrow("The current user is not authorized for this action.");
+  it("allows assistants to archive students", () => {
+    const query = buildArchiveStudentQuery(
+      database,
+      assistant,
+      SYNTHETIC_SEED_IDS.river,
+    ).toSQL();
+    expect(query.params).toContain(SYNTHETIC_SEED_IDS.river);
   });
 });

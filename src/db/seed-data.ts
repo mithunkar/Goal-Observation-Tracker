@@ -1,10 +1,10 @@
 import type {
+  classroomMemberships,
   goalStrategyAssignments,
   goals,
   strategies,
   students,
   users,
-  userStudentAssignments,
   workspaces,
 } from "@/db/schema";
 
@@ -42,35 +42,52 @@ export const syntheticSeedData = {
   users: [
     {
       id: SYNTHETIC_SEED_IDS.teacher,
-      workspaceId: SYNTHETIC_SEED_IDS.workspace,
       displayName: "Demo teacher",
       email: "teacher@evidence-loop.example.invalid",
-      role: "TEACHER",
-      status: "ACTIVE",
       createdAt,
       updatedAt,
     },
     {
       id: SYNTHETIC_SEED_IDS.assignedAssistant,
-      workspaceId: SYNTHETIC_SEED_IDS.workspace,
       displayName: "Demo assistant — assigned",
       email: "assigned-assistant@evidence-loop.example.invalid",
-      role: "ASSISTANT",
-      status: "ACTIVE",
       createdAt,
       updatedAt,
     },
     {
       id: SYNTHETIC_SEED_IDS.unassignedAssistant,
-      workspaceId: SYNTHETIC_SEED_IDS.workspace,
       displayName: "Demo assistant — unassigned",
       email: "unassigned-assistant@evidence-loop.example.invalid",
-      role: "ASSISTANT",
-      status: "ACTIVE",
       createdAt,
       updatedAt,
     },
   ] satisfies Array<typeof users.$inferInsert>,
+  classroomMemberships: [
+    {
+      workspaceId: SYNTHETIC_SEED_IDS.workspace,
+      userId: SYNTHETIC_SEED_IDS.teacher,
+      role: "TEACHER",
+      status: "ACTIVE",
+      joinedAt: createdAt,
+      updatedAt,
+    },
+    {
+      workspaceId: SYNTHETIC_SEED_IDS.workspace,
+      userId: SYNTHETIC_SEED_IDS.assignedAssistant,
+      role: "ASSISTANT",
+      status: "ACTIVE",
+      joinedAt: createdAt,
+      updatedAt,
+    },
+    {
+      workspaceId: SYNTHETIC_SEED_IDS.workspace,
+      userId: SYNTHETIC_SEED_IDS.unassignedAssistant,
+      role: "ASSISTANT",
+      status: "ACTIVE",
+      joinedAt: createdAt,
+      updatedAt,
+    },
+  ] satisfies Array<typeof classroomMemberships.$inferInsert>,
   students: [
     {
       id: SYNTHETIC_SEED_IDS.river,
@@ -100,20 +117,6 @@ export const syntheticSeedData = {
       updatedAt,
     },
   ] satisfies Array<typeof students.$inferInsert>,
-  userStudentAssignments: [
-    {
-      workspaceId: SYNTHETIC_SEED_IDS.workspace,
-      userId: SYNTHETIC_SEED_IDS.assignedAssistant,
-      studentId: SYNTHETIC_SEED_IDS.river,
-      createdAt,
-    },
-    {
-      workspaceId: SYNTHETIC_SEED_IDS.workspace,
-      userId: SYNTHETIC_SEED_IDS.assignedAssistant,
-      studentId: SYNTHETIC_SEED_IDS.sage,
-      createdAt,
-    },
-  ] satisfies Array<typeof userStudentAssignments.$inferInsert>,
   goals: [
     {
       id: SYNTHETIC_SEED_IDS.riverDirectionsGoal,
@@ -268,3 +271,21 @@ export const syntheticSeedData = {
     },
   ] satisfies Array<typeof goalStrategyAssignments.$inferInsert>,
 } as const;
+
+export function syntheticIdentity(userId: string) {
+  const user = syntheticSeedData.users.find((candidate) => candidate.id === userId);
+  const membership = syntheticSeedData.classroomMemberships.find(
+    (candidate) => candidate.userId === userId,
+  );
+  if (!user || !membership) {
+    throw new Error("Missing synthetic identity.");
+  }
+  return {
+    id: user.id,
+    displayName: user.displayName,
+    email: user.email,
+    workspaceId: membership.workspaceId,
+    role: membership.role,
+    status: membership.status,
+  };
+}
