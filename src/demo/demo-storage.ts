@@ -11,9 +11,9 @@ import type {
 } from "@/domain/scoring";
 
 export const DEMO_DRAFT_STORAGE_KEY =
-  "sped-evidence-loop:demo-session-draft:v1";
+  "goal-observation-tracker:demo-session-draft:v1";
 export const DEMO_SUBMISSIONS_STORAGE_KEY =
-  "sped-evidence-loop:demo-submissions:v1";
+  "goal-observation-tracker:demo-submissions:v1";
 
 export type DemoDrafts = Record<string, DemoGoalDraft>;
 
