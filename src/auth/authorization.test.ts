@@ -5,6 +5,7 @@ import {
   AuthorizationError,
   canCreateStudentSession,
   canInviteMembers,
+  canManageGroups,
   canManageClassroom,
   canViewStudent,
   filterAuthorizedStudents,
@@ -29,6 +30,7 @@ describe("student authorization", () => {
     ).toEqual(syntheticSeedData.students);
     expect(canManageClassroom(teacher)).toBe(true);
     expect(canInviteMembers(teacher)).toBe(true);
+    expect(canManageGroups(teacher)).toBe(true);
   });
 
   it("gives an assistant the same classroom access without invitation rights", () => {
@@ -38,6 +40,7 @@ describe("student authorization", () => {
     expect(canViewStudent(assistant, micah)).toBe(true);
     expect(canManageClassroom(assistant)).toBe(true);
     expect(canInviteMembers(assistant)).toBe(false);
+    expect(canManageGroups(assistant)).toBe(false);
   });
 
   it("gives every active assistant access to the classroom roster", () => {
@@ -68,6 +71,7 @@ describe("student authorization", () => {
     expect(canViewStudent(inactiveTeacher, river)).toBe(false);
     expect(canManageClassroom(inactiveTeacher)).toBe(false);
     expect(canInviteMembers(inactiveTeacher)).toBe(false);
+    expect(canManageGroups(inactiveTeacher)).toBe(false);
   });
 
   it("prevents new sessions for archived students", () => {

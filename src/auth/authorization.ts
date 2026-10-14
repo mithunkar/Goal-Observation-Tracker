@@ -49,6 +49,10 @@ export function canInviteMembers(actor: AuthorizationActor | null) {
   return isActiveActor(actor) && actor.role === "TEACHER";
 }
 
+export function canManageGroups(actor: AuthorizationActor | null) {
+  return isActiveActor(actor) && actor.role === "TEACHER";
+}
+
 export function assertCanViewStudent(
   actor: AuthorizationActor | null,
   student: StudentAuthorizationScope,

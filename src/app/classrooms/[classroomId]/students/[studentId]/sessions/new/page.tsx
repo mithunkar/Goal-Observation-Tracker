@@ -34,7 +34,7 @@ export default async function NewStudentSessionPage({
       <header className="demo-header">
         <Link className="demo-brand" href={classroomPath(classroomId)} aria-label="Student roster">
           <span className="brand-mark" aria-hidden="true">
-            GO
+            GOT
           </span>
           <span>Goal Observation Tracker</span>
         </Link>

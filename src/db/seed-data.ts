@@ -1,4 +1,5 @@
 import type {
+  classroomGroups,
   classroomMemberships,
   goalStrategyAssignments,
   goals,
@@ -88,6 +89,32 @@ export const syntheticSeedData = {
       updatedAt,
     },
   ] satisfies Array<typeof classroomMemberships.$inferInsert>,
+  classroomGroups: [
+    {
+      workspaceId: SYNTHETIC_SEED_IDS.workspace,
+      key: "AM_MW",
+      name: "AM (M/W)",
+      position: 0,
+      createdAt,
+      updatedAt,
+    },
+    {
+      workspaceId: SYNTHETIC_SEED_IDS.workspace,
+      key: "AM_TTH",
+      name: "AM (T/Th)",
+      position: 1,
+      createdAt,
+      updatedAt,
+    },
+    {
+      workspaceId: SYNTHETIC_SEED_IDS.workspace,
+      key: "PM",
+      name: "PM",
+      position: 2,
+      createdAt,
+      updatedAt,
+    },
+  ] satisfies Array<typeof classroomGroups.$inferInsert>,
   students: [
     {
       id: SYNTHETIC_SEED_IDS.river,

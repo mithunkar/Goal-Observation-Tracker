@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { canManageClassroom } from "@/auth/authorization";
 import { requireCurrentApplicationIdentity } from "@/auth/application-session";
 import { classroomPath } from "@/classroom/routes";
+import { listClassroomGroups } from "@/db/queries/classroom-groups";
 
 import { createStudentAction } from "./actions";
 import { StudentForm } from "./student-form";
@@ -16,6 +17,8 @@ export default async function NewStudentPage({ params }: { params: Promise<{ cla
   if (!canManageClassroom(identity)) {
     redirect(classroomPath(classroomId));
   }
+  const { db } = await import("@/db/client");
+  const groups = await listClassroomGroups(db, identity);
 
   return (
     <main className="auth-shell onboarding-shell">
@@ -26,7 +29,7 @@ export default async function NewStudentPage({ params }: { params: Promise<{ cla
         <div className="auth-heading">
           <h1 id="new-student-title">Add a student</h1>
         </div>
-        <StudentForm action={createStudentAction.bind(null, classroomId)} />
+        <StudentForm action={createStudentAction.bind(null, classroomId)} groups={groups} />
       </section>
     </main>
   );

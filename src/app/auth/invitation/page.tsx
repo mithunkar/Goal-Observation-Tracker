@@ -16,7 +16,7 @@ export default async function InvitationPage() {
   return (
     <main className="auth-shell">
       <Link className="auth-brand" href="/" aria-label="Goal Observation Tracker home">
-        <span className="brand-mark" aria-hidden="true">GO</span>
+        <span className="brand-mark" aria-hidden="true">GOT</span>
         <span>Goal Observation Tracker</span>
       </Link>
       <section className="auth-surface" aria-labelledby="invite-title">

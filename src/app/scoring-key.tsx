@@ -7,12 +7,12 @@ type ScoringKeyProps = {
 export function ScoringKey({ context = "recording" }: ScoringKeyProps) {
   return (
     <aside
-      className="rubric-key"
+      className={`rubric-key${context === "target" ? " rubric-key-compact" : ""}`}
       aria-label={context === "target" ? "Target score key" : "Scoring key"}
     >
       <details>
         <summary>
-          {context === "target" ? "Scoring key for target selection" : "Scoring key"}
+          {context === "target" ? "Need help choosing a score?" : "Scoring key"}
         </summary>
         {context === "target" ? (
           <p className="rubric-key-intro">

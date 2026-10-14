@@ -1,13 +1,12 @@
 import { z } from "zod";
 
-export const STUDENT_GROUPS = ["AM_MW", "AM_TTH", "PM"] as const;
-export type StudentGroup = (typeof STUDENT_GROUPS)[number];
+export const DEFAULT_STUDENT_GROUPS = [
+  { key: "AM_MW", name: "AM (M/W)", position: 0 },
+  { key: "AM_TTH", name: "AM (T/Th)", position: 1 },
+  { key: "PM", name: "PM", position: 2 },
+] as const;
 
-export const STUDENT_GROUP_LABELS: Record<StudentGroup, string> = {
-  AM_MW: "AM (M/W)",
-  AM_TTH: "AM (T/Th)",
-  PM: "PM",
-};
+export type StudentGroup = string;
 
 export const GOAL_AREAS = [
   "Social Communication",
@@ -17,6 +16,7 @@ export const GOAL_AREAS = [
   "Adaptive",
   "Cognitive",
   "Receptive Communication",
+  "Focus",
 ] as const;
 export type GoalArea = (typeof GOAL_AREAS)[number];
 
@@ -25,6 +25,10 @@ export type GoalArea = (typeof GOAL_AREAS)[number];
 export const SKILL_AREAS = GOAL_AREAS;
 export type SkillArea = GoalArea;
 
-export const studentGroupSchema = z.enum(STUDENT_GROUPS);
+export const studentGroupSchema = z
+  .string()
+  .trim()
+  .min(1, "Choose a schedule group.")
+  .max(80, "The selected schedule group is invalid.");
 export const goalAreaSchema = z.enum(GOAL_AREAS);
 export const skillAreaSchema = goalAreaSchema;

@@ -3,6 +3,7 @@ import { filterAuthorizedStudents } from "@/auth/authorization";
 import {
   syntheticSeedData,
 } from "@/db/seed-data";
+import { listClassroomGroups } from "@/db/queries/classroom-groups";
 import { listAuthorizedStudents } from "@/db/queries/students";
 
 export async function loadAuthorizedStudentRoster(
@@ -10,9 +11,14 @@ export async function loadAuthorizedStudentRoster(
 ) {
   if (process.env.DATABASE_URL) {
     const { db } = await import("@/db/client");
+    const [students, groups] = await Promise.all([
+      listAuthorizedStudents(db, actor),
+      listClassroomGroups(db, actor),
+    ]);
     return {
       source: "DATABASE" as const,
-      students: await listAuthorizedStudents(db, actor),
+      students,
+      groups,
     };
   }
 
@@ -22,6 +28,11 @@ export async function loadAuthorizedStudentRoster(
 
   return {
     source: "SYNTHETIC_FIXTURE" as const,
+    groups: syntheticSeedData.classroomGroups.map(({ key, name, position }) => ({
+      key,
+      name,
+      position,
+    })),
     students: filterAuthorizedStudents(
       actor,
       syntheticSeedData.students,

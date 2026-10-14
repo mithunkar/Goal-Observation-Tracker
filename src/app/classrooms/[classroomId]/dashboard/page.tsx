@@ -2,10 +2,12 @@ import Link from "next/link";
 
 import { requireCurrentApplicationIdentity } from "@/auth/application-session";
 import { signOut } from "@/app/sign-in/actions";
+import { canManageGroups } from "@/auth/authorization";
 import { loadAuthorizedStudentRoster } from "@/data/student-roster";
-import { STUDENT_GROUP_LABELS, STUDENT_GROUPS, type StudentGroup } from "@/domain/catalog";
 import { classroomPath } from "@/classroom/routes";
 import { ClassroomSwitcher } from "../classroom-switcher";
+import { createClassroomGroupAction } from "./actions";
+import { CreateGroupFolder } from "./create-group-folder";
 
 export const dynamic = "force-dynamic";
 
@@ -13,18 +15,26 @@ export default async function DashboardPage({ params, searchParams }: { params: 
   const { classroomId } = await params;
   const identity = await requireCurrentApplicationIdentity(classroomId);
   const [roster, query] = await Promise.all([loadAuthorizedStudentRoster(identity), searchParams]);
-  const selectedGroup = STUDENT_GROUPS.includes(query.group as StudentGroup)
-    ? (query.group as StudentGroup)
-    : STUDENT_GROUPS[0];
-  const groupCounts = Object.fromEntries(STUDENT_GROUPS.map((group) => [group, roster.students.filter((student) => student.group === group).length])) as Record<StudentGroup, number>;
-  const visibleStudents = roster.students.filter((student) => student.group === selectedGroup);
+  const selectedGroup = roster.groups.some((group) => group.key === query.group)
+    ? query.group
+    : roster.groups[0]?.key;
+  const selectedGroupName = roster.groups.find(
+    (group) => group.key === selectedGroup,
+  )?.name;
+  const groupCounts = new Map<string, number>();
+  for (const student of roster.students) {
+    groupCounts.set(student.group, (groupCounts.get(student.group) ?? 0) + 1);
+  }
+  const visibleStudents = selectedGroup
+    ? roster.students.filter((student) => student.group === selectedGroup)
+    : [];
 
   return (
     <main className="dashboard-shell">
       <header className="dashboard-header">
         <Link className="demo-brand" href={classroomPath(classroomId)} aria-label="Student roster">
           <span className="brand-mark" aria-hidden="true">
-            GO
+            GOT
           </span>
           <span>Goal Observation Tracker</span>
         </Link>
@@ -62,11 +72,27 @@ export default async function DashboardPage({ params, searchParams }: { params: 
       </section>
 
       <nav className="group-folders" aria-label="Student schedule groups">
-        {STUDENT_GROUPS.map((group) => (
-          <Link key={group} href={`${classroomPath(classroomId)}?group=${group}`} className="group-folder" aria-current={selectedGroup === group ? "page" : undefined} data-selected={selectedGroup === group}>
-            <span aria-hidden="true">▰</span><strong>{STUDENT_GROUP_LABELS[group]}</strong><small>{groupCounts[group]} {groupCounts[group] === 1 ? "student" : "students"}</small>
-          </Link>
-        ))}
+        {roster.groups.map((group) => {
+          const count = groupCounts.get(group.key) ?? 0;
+          return (
+            <Link
+              key={group.key}
+              href={`${classroomPath(classroomId)}?group=${encodeURIComponent(group.key)}`}
+              className="group-folder"
+              aria-current={selectedGroup === group.key ? "page" : undefined}
+              data-selected={selectedGroup === group.key}
+            >
+              <span aria-hidden="true">▰</span>
+              <strong>{group.name}</strong>
+              <small>{count} {count === 1 ? "student" : "students"}</small>
+            </Link>
+          );
+        })}
+        {canManageGroups(identity) ? (
+          <CreateGroupFolder
+            action={createClassroomGroupAction.bind(null, classroomId)}
+          />
+        ) : null}
       </nav>
 
       {roster.students.length === 0 ? (
@@ -76,7 +102,7 @@ export default async function DashboardPage({ params, searchParams }: { params: 
           <p>Add your first student to begin collecting data.</p>
         </section>
       ) : visibleStudents.length === 0 ? (
-        <section className="roster-empty"><span aria-hidden="true">0</span><h2>No students in {STUDENT_GROUP_LABELS[selectedGroup]}</h2><p>Add a student or choose another schedule group.</p></section>
+        <section className="roster-empty"><span aria-hidden="true">0</span><h2>No students in {selectedGroupName ?? "this group"}</h2><p>Add a student or choose another schedule group.</p></section>
       ) : (
         <ul className="student-roster" aria-label="Authorized students">
           {visibleStudents.map((student) => (

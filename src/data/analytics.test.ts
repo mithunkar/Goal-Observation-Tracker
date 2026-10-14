@@ -4,7 +4,7 @@ import { summarizeAnalytics, summarizeGoals, uniqueSessionCount } from "./analyt
 import type { AnalyticsObservation } from "./analytics";
 
 const base: AnalyticsObservation = {
-  sessionId: "session-1", studentId: "student", studentName: "Avery", studentGroup: "AM_MW", goalId: "goal", goalVersion: 1,
+  sessionId: "session-1", studentId: "student", studentName: "Avery", studentGroup: "AM_MW", studentGroupName: "AM (M/W)", goalId: "goal", goalVersion: 1,
   goalTitle: "Sharing", goalObjective: "Share a toy.", domain: "Social Emotional", targetScore: 3,
   occurredAt: new Date("2026-10-01T17:00:00.000Z"), sessionType: "Centers", scorerName: "Teacher",
   score: 4, noDataReason: null, fidelityStatus: "FULL", note: null, strategyAssignmentId: null, strategyVersion: null, strategyName: null,

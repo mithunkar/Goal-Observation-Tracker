@@ -6,7 +6,7 @@ import {
   initialStudentActionState,
   type StudentActionState,
 } from "@/domain/student";
-import { STUDENT_GROUP_LABELS, STUDENT_GROUPS, type StudentGroup } from "@/domain/catalog";
+import type { StudentGroup } from "@/domain/catalog";
 
 type StudentFormProps = {
   action: (
@@ -18,10 +18,11 @@ type StudentFormProps = {
     group: StudentGroup;
     teacherNotes: string | null;
   };
+  groups: Array<{ key: string; name: string }>;
   submitLabel?: string;
 };
 
-export function StudentForm({ action, initialStudent, submitLabel = "Add student" }: StudentFormProps) {
+export function StudentForm({ action, groups, initialStudent, submitLabel = "Add student" }: StudentFormProps) {
   const [state, formAction, pending] = useActionState(
     action,
     initialStudentActionState,
@@ -51,8 +52,8 @@ export function StudentForm({ action, initialStudent, submitLabel = "Add student
         <span>Schedule group</span>
         <select name="group" defaultValue={initialStudent?.group ?? ""} required>
           <option value="" disabled>Choose a group</option>
-          {STUDENT_GROUPS.map((group) => (
-            <option key={group} value={group}>{STUDENT_GROUP_LABELS[group]}</option>
+          {groups.map((group) => (
+            <option key={group.key} value={group.key}>{group.name}</option>
           ))}
         </select>
       </label>

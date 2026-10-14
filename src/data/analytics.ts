@@ -1,9 +1,9 @@
 import { summarizeObservations } from "@/domain/analytics";
 import type { NoDataReason, ObservationEntry, RubricScore, StrategyFidelityStatus } from "@/domain/scoring";
-import type { SkillArea, StudentGroup } from "@/domain/catalog";
+import type { SkillArea } from "@/domain/catalog";
 
 export type AnalyticsObservation = {
-  sessionId: string; studentId: string; studentName: string; studentGroup: StudentGroup; goalId: string; goalVersion: number;
+  sessionId: string; studentId: string; studentName: string; studentGroup: string; studentGroupName: string; goalId: string; goalVersion: number;
   goalTitle: string; goalObjective: string; domain: SkillArea; targetScore: number | null;
   occurredAt: Date; sessionType: string; scorerName: string; score: number | null; noDataReason: string | null;
   fidelityStatus: string | null; note: string | null; strategyAssignmentId: string | null; strategyVersion: number | null; strategyName: string | null;

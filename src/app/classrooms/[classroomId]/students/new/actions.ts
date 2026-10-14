@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { canManageClassroom } from "@/auth/authorization";
 import { requireCurrentApplicationIdentity } from "@/auth/application-session";
 import { classroomPath } from "@/classroom/routes";
+import { classroomGroupExists } from "@/db/queries/classroom-groups";
 import { createStudent } from "@/db/queries/students";
 import {
   createStudentSchema,
@@ -40,6 +41,12 @@ export async function createStudentAction(
   let studentId: string;
   try {
     const { db } = await import("@/db/client");
+    if (!(await classroomGroupExists(db, identity, parsed.data.group))) {
+      return {
+        status: "error",
+        message: "Choose a group from this classroom.",
+      };
+    }
     const student = await createStudent(db, identity, parsed.data);
     if (!student) {
       throw new Error("Student creation returned no record.");

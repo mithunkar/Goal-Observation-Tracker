@@ -47,6 +47,23 @@ export async function seedSyntheticDevelopmentData(
         });
     }
 
+    for (const group of syntheticSeedData.classroomGroups) {
+      await transaction
+        .insert(schema.classroomGroups)
+        .values(group)
+        .onConflictDoUpdate({
+          target: [
+            schema.classroomGroups.workspaceId,
+            schema.classroomGroups.key,
+          ],
+          set: {
+            name: group.name,
+            position: group.position,
+            updatedAt: group.updatedAt,
+          },
+        });
+    }
+
     for (const student of syntheticSeedData.students) {
       await transaction
         .insert(schema.students)

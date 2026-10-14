@@ -32,6 +32,28 @@ export function GoalForm({ action, initialGoal, submitLabel = "Save goal" }: Goa
   return (
     <form className="account-form" action={formAction} noValidate>
       <label className="form-field">
+        <span>Goal area</span>
+        <select
+          name="goalArea"
+          defaultValue={initialGoal?.domain ?? ""}
+          aria-invalid={Boolean(state.errors?.goalArea)}
+          aria-describedby={
+            state.errors?.goalArea ? "goal-area-error" : undefined
+          }
+          autoFocus
+          required
+        >
+          <option value="" disabled>
+            Choose one
+          </option>
+          {GOAL_AREAS.map((area) => <option key={area} value={area}>{area}</option>)}
+        </select>
+        {state.errors?.goalArea ? (
+          <small id="goal-area-error">{state.errors.goalArea[0]}</small>
+        ) : null}
+      </label>
+
+      <label className="form-field">
         <span>What should the student do?</span>
         <textarea
           name="objectiveText"
@@ -49,31 +71,7 @@ export function GoalForm({ action, initialGoal, submitLabel = "Save goal" }: Goa
         ) : null}
       </label>
 
-      <ScoringKey context="target" />
-
-      <div className="form-row">
-        <label className="form-field">
-          <span>Goal area</span>
-          <select
-            name="goalArea"
-            defaultValue={initialGoal?.domain ?? ""}
-            aria-invalid={Boolean(state.errors?.goalArea)}
-            aria-describedby={
-              state.errors?.goalArea ? "goal-area-error" : undefined
-            }
-            autoFocus
-            required
-          >
-            <option value="" disabled>
-              Choose one
-            </option>
-            {GOAL_AREAS.map((area) => <option key={area} value={area}>{area}</option>)}
-          </select>
-          {state.errors?.goalArea ? (
-            <small id="goal-area-error">{state.errors.goalArea[0]}</small>
-          ) : null}
-        </label>
-
+      <div className="target-score-row">
         <label className="form-field">
           <span>Target score</span>
           <select name="targetScore" defaultValue={initialGoal?.targetScore?.toString() ?? ""}>
@@ -85,6 +83,7 @@ export function GoalForm({ action, initialGoal, submitLabel = "Save goal" }: Goa
             <option value="0">0</option>
           </select>
         </label>
+        <ScoringKey context="target" />
       </div>
 
       {initialGoal?.status ? (

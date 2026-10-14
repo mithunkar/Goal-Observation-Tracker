@@ -7,10 +7,11 @@ import {
   goalRevisions,
   goals,
   skillArea,
-  studentGroup,
   studentStatus,
+  students,
   userRole,
   userStatus,
+  classroomGroups,
   classroomMemberships,
 } from "@/db/schema";
 
@@ -25,8 +26,29 @@ describe("core database schema", () => {
       "PAUSED",
       "ARCHIVED",
     ]);
-    expect(studentGroup.enumValues).toEqual(["AM_MW", "AM_TTH", "PM"]);
     expect(skillArea.enumValues).toContain("Receptive Communication");
+    expect(skillArea.enumValues).toContain("Focus");
+  });
+
+  it("keeps each student group inside its classroom", () => {
+    const studentConfig = getTableConfig(students);
+    const groupReference = studentConfig.foreignKeys
+      .find((key) => key.getName() === "students_group_foreign_key")
+      ?.reference();
+
+    expect(groupReference?.columns.map((column) => column.name)).toEqual([
+      "workspace_id",
+      "group",
+    ]);
+    expect(
+      groupReference?.foreignColumns.map((column) => column.name),
+    ).toEqual(["workspace_id", "key"]);
+
+    expect(
+      getTableConfig(classroomGroups).primaryKeys[0]?.columns.map(
+        (column) => column.name,
+      ),
+    ).toEqual(["workspace_id", "key"]);
   });
 
   it("stores immutable goal revisions by workspace, goal, and version", () => {

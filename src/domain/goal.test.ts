@@ -28,6 +28,16 @@ describe("goal creation", () => {
     expect(result.targetScore).toBeNull();
   });
 
+  it("accepts Focus as a goal area", () => {
+    const result = createGoalSchema.parse({
+      goalArea: "Focus",
+      objectiveText: "Attend to a teacher-led activity for five minutes.",
+      targetScore: "3",
+    });
+
+    expect(result.domain).toBe("Focus");
+  });
+
   it("uses the classroom time zone for active dates", () => {
     expect(
       dateInTimeZone(new Date("2026-10-07T02:00:00.000Z"), "America/Los_Angeles"),

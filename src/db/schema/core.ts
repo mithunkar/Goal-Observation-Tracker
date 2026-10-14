@@ -33,7 +33,6 @@ export const studentStatus = pgEnum("student_status", [
   "ACTIVE",
   "ARCHIVED",
 ]);
-export const studentGroup = pgEnum("student_group", ["AM_MW", "AM_TTH", "PM"]);
 export const skillArea = pgEnum("skill_area", [
   "Social Communication",
   "Social Emotional",
@@ -42,6 +41,7 @@ export const skillArea = pgEnum("skill_area", [
   "Adaptive",
   "Cognitive",
   "Receptive Communication",
+  "Focus",
 ]);
 export const goalStatus = pgEnum("goal_status", [
   "DRAFT",
@@ -145,6 +145,44 @@ export const classroomInvitations = pgTable(
   ],
 );
 
+export const classroomGroups = pgTable(
+  "classroom_groups",
+  {
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "restrict" }),
+    key: text("key").notNull(),
+    name: text("name").notNull(),
+    position: integer("position").default(0).notNull(),
+    createdByUserId: uuid("created_by_user_id"),
+    createdAt,
+    updatedAt,
+  },
+  (table) => [
+    primaryKey({
+      name: "classroom_groups_primary_key",
+      columns: [table.workspaceId, table.key],
+    }),
+    uniqueIndex("classroom_groups_workspace_name_unique").on(
+      table.workspaceId,
+      sql`lower(${table.name})`,
+    ),
+    foreignKey({
+      name: "classroom_groups_creator_foreign_key",
+      columns: [table.workspaceId, table.createdByUserId],
+      foreignColumns: [
+        classroomMemberships.workspaceId,
+        classroomMemberships.userId,
+      ],
+    }).onDelete("restrict"),
+    check(
+      "classroom_groups_name_valid",
+      sql`${table.name} = trim(${table.name}) and char_length(${table.name}) between 1 and 40`,
+    ),
+    check("classroom_groups_position_nonnegative", sql`${table.position} >= 0`),
+  ],
+);
+
 export const students = pgTable(
   "students",
   {
@@ -155,7 +193,7 @@ export const students = pgTable(
     displayName: text("display_name").notNull(),
     externalReference: text("external_reference"),
     teacherNotes: text("teacher_notes"),
-    group: studentGroup("group").notNull(),
+    group: text("group").notNull(),
     status: studentStatus("status").default("ACTIVE").notNull(),
     createdAt,
     updatedAt,
@@ -166,6 +204,11 @@ export const students = pgTable(
       table.workspaceId,
       table.id,
     ),
+    foreignKey({
+      name: "students_group_foreign_key",
+      columns: [table.workspaceId, table.group],
+      foreignColumns: [classroomGroups.workspaceId, classroomGroups.key],
+    }).onDelete("restrict"),
     index("students_workspace_status_index").on(
       table.workspaceId,
       table.status,

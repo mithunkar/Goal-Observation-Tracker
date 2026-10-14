@@ -2,13 +2,13 @@ import { and, asc, eq, gte, lte } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { AuthorizationError, canManageClassroom, type AuthorizationActor } from "@/auth/authorization";
-import { goalRevisions, goalStrategyAssignments, observations, sessions, strategies, students, users } from "@/db/schema";
-import type { SkillArea, StudentGroup } from "@/domain/catalog";
+import { classroomGroups, goalRevisions, goalStrategyAssignments, observations, sessions, strategies, students, users } from "@/db/schema";
+import type { SkillArea } from "@/domain/catalog";
 
 export type AnalyticsFilters = {
   start: Date;
   end: Date;
-  group?: StudentGroup;
+  group?: string;
   domain?: SkillArea;
   studentId?: string;
 };
@@ -18,6 +18,7 @@ export const observationAnalyticsSelection = {
   studentId: students.id,
   studentName: students.displayName,
   studentGroup: students.group,
+  studentGroupName: classroomGroups.name,
   goalId: observations.goalId,
   goalVersion: observations.goalVersion,
   goalTitle: goalRevisions.title,
@@ -58,6 +59,7 @@ export function buildAnalyticsObservationQuery(
     .from(observations)
     .innerJoin(sessions, and(eq(sessions.workspaceId, observations.workspaceId), eq(sessions.id, observations.sessionId)))
     .innerJoin(students, and(eq(students.workspaceId, observations.workspaceId), eq(students.id, observations.studentId)))
+    .innerJoin(classroomGroups, and(eq(classroomGroups.workspaceId, students.workspaceId), eq(classroomGroups.key, students.group)))
     .innerJoin(goalRevisions, and(eq(goalRevisions.workspaceId, observations.workspaceId), eq(goalRevisions.goalId, observations.goalId), eq(goalRevisions.version, observations.goalVersion)))
     .innerJoin(users, eq(users.id, sessions.recordedByUserId))
     .leftJoin(goalStrategyAssignments, and(eq(goalStrategyAssignments.workspaceId, observations.workspaceId), eq(goalStrategyAssignments.id, observations.strategyAssignmentId)))
