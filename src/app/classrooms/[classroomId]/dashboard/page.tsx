@@ -6,8 +6,12 @@ import { canManageGroups } from "@/auth/authorization";
 import { loadAuthorizedStudentRoster } from "@/data/student-roster";
 import { classroomPath } from "@/classroom/routes";
 import { ClassroomSwitcher } from "../classroom-switcher";
-import { createClassroomGroupAction } from "./actions";
+import {
+  createClassroomGroupAction,
+  deleteClassroomGroupAction,
+} from "./actions";
 import { CreateGroupFolder } from "./create-group-folder";
+import { RemoveGroupControl } from "./remove-group-control";
 
 export const dynamic = "force-dynamic";
 
@@ -75,17 +79,30 @@ export default async function DashboardPage({ params, searchParams }: { params: 
         {roster.groups.map((group) => {
           const count = groupCounts.get(group.key) ?? 0;
           return (
-            <Link
-              key={group.key}
-              href={`${classroomPath(classroomId)}?group=${encodeURIComponent(group.key)}`}
-              className="group-folder"
-              aria-current={selectedGroup === group.key ? "page" : undefined}
-              data-selected={selectedGroup === group.key}
-            >
-              <span aria-hidden="true">▰</span>
-              <strong>{group.name}</strong>
-              <small>{count} {count === 1 ? "student" : "students"}</small>
-            </Link>
+            <div className="group-folder-shell" key={group.key}>
+              <Link
+                href={`${classroomPath(classroomId)}?group=${encodeURIComponent(group.key)}`}
+                className="group-folder"
+                aria-current={selectedGroup === group.key ? "page" : undefined}
+                data-selected={selectedGroup === group.key}
+              >
+                <span aria-hidden="true">▰</span>
+                <strong>{group.name}</strong>
+                <small>{count} {count === 1 ? "student" : "students"}</small>
+              </Link>
+              {canManageGroups(identity) ? (
+                <RemoveGroupControl
+                  action={deleteClassroomGroupAction.bind(
+                    null,
+                    classroomId,
+                    group.key,
+                  )}
+                  groupName={group.name}
+                  isOnlyGroup={roster.groups.length === 1}
+                  studentCount={count}
+                />
+              ) : null}
+            </div>
           );
         })}
         {canManageGroups(identity) ? (

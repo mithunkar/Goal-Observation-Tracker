@@ -6,6 +6,7 @@ import { SYNTHETIC_SEED_IDS } from "@/db/seed-data";
 import {
   buildClassroomGroupListQuery,
   buildCreateClassroomGroupQuery,
+  buildDeleteClassroomGroupQuery,
 } from "@/db/queries/classroom-groups";
 
 const database = drizzle.mock();
@@ -48,6 +49,32 @@ describe("classroom group queries", () => {
         { name: "Friday group" },
         "80000000-0000-4000-8000-000000000001",
         3,
+      ),
+    ).toThrow(AuthorizationError);
+  });
+
+  it("deletes only an empty group when another classroom group remains", () => {
+    const query = buildDeleteClassroomGroupQuery(
+      database,
+      teacher,
+      "80000000-0000-4000-8000-000000000001",
+    ).toSQL();
+
+    expect(query.sql).toContain('delete from "classroom_groups"');
+    expect(query.sql).toContain('"classroom_groups"."workspace_id" = $1');
+    expect(query.sql).toContain("not exists");
+    expect(query.sql).toContain('from "students"');
+    expect(query.sql).toContain("exists");
+    expect(query.sql).toContain('from "classroom_groups" "other_groups"');
+    expect(query.params).toContain(SYNTHETIC_SEED_IDS.workspace);
+  });
+
+  it("does not allow assistants to delete groups", () => {
+    expect(() =>
+      buildDeleteClassroomGroupQuery(
+        database,
+        { ...teacher, role: "ASSISTANT" },
+        "80000000-0000-4000-8000-000000000001",
       ),
     ).toThrow(AuthorizationError);
   });
